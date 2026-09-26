@@ -12,22 +12,29 @@ from config import Config
 
 
 # ──────────────────────────────────────────
-# Gemini Client Initialization
+# Embedding Model Initialization (FastEmbed Local + Gemini Fallback)
 # ──────────────────────────────────────────
 
-_client = None
+_fastembed_model = None
+_gemini_client = None
 
 
-def _get_client() -> genai.Client:
-    """Lazy-initialize the Gemini client."""
-    global _client
-    if _client is None:
-        if not Config.GEMINI_API_KEY:
-            raise ValueError(
-                "GEMINI_API_KEY is not set. Get a free key at https://aistudio.google.com/apikey"
-            )
-        _client = genai.Client(api_key=Config.GEMINI_API_KEY)
-    return _client
+def _get_fastembed():
+    """Lazy-initialize the local FastEmbed model (768-dimensional BAAI/bge-base-en-v1.5)."""
+    global _fastembed_model
+    if _fastembed_model is None:
+        from fastembed import TextEmbedding
+        _fastembed_model = TextEmbedding(model_name="BAAI/bge-base-en-v1.5")
+    return _fastembed_model
+
+
+def _get_gemini_client():
+    """Lazy-initialize Gemini client if configured."""
+    global _gemini_client
+    if _gemini_client is None and Config.GEMINI_API_KEY:
+        from google import genai
+        _gemini_client = genai.Client(api_key=Config.GEMINI_API_KEY)
+    return _gemini_client
 
 
 # ──────────────────────────────────────────
@@ -37,27 +44,27 @@ def _get_client() -> genai.Client:
 def generate_embedding(text: str) -> list[float]:
     """
     Generate a 768-dimensional embedding vector for a single text.
-
-    Args:
-        text: The input text (job description, resume chunk, etc.)
-
-    Returns:
-        A list of 768 floats representing the semantic vector.
+    Uses local FastEmbed (BAAI/bge-base-en-v1.5) by default ($0 cost, 0 API keys required).
     """
     if not text or not text.strip():
         return [0.0] * Config.EMBEDDING_DIMENSIONS
 
-    client = _get_client()
+    # Try Gemini if API key is present
+    gemini = _get_gemini_client()
+    if gemini is not None:
+        try:
+            result = gemini.models.embed_content(
+                model="text-embedding-004",
+                contents=text[:8000],
+            )
+            return list(result.embeddings[0].values)
+        except Exception as e:
+            print(f"[Embeddings] Gemini embedding failed, falling back to local FastEmbed: {e}")
 
-    # Truncate to ~8000 chars (model has token limits, this is safe)
-    truncated = text[:8000]
-
-    result = client.models.embed_content(
-        model=Config.EMBEDDING_MODEL,
-        contents=truncated,
-    )
-
-    return result.embeddings[0].values
+    # Primary: FastEmbed local ONNX model (768 dims)
+    model = _get_fastembed()
+    embeddings = list(model.embed([text[:4000]]))
+    return [float(x) for x in embeddings[0]]
 
 
 # ──────────────────────────────────────────
@@ -86,6 +93,17 @@ def generate_embeddings_batch(
     all_embeddings: list[list[float]] = []
     total = len(texts)
 
+    # Use local FastEmbed if Gemini is not configured
+    gemini = _get_gemini_client()
+    if gemini is None:
+        model = _get_fastembed()
+        cleaned_texts = [(t[:4000] if t else " ") for t in texts]
+        embeddings = list(model.embed(cleaned_texts, batch_size=batch_size))
+        all_embeddings = [[float(x) for x in emb] for emb in embeddings]
+        print(f"  [Embeddings] ✓ Generated {len(all_embeddings)} vectors via FastEmbed (Local)")
+        return all_embeddings
+
+    # Otherwise use Gemini with rate limit pacing
     for i in range(0, total, batch_size):
         batch = texts[i : i + batch_size]
         batch_num = (i // batch_size) + 1
@@ -96,10 +114,6 @@ def generate_embeddings_batch(
             f"({len(batch)} texts)..."
         )
 
-        client = _get_client()
-
-        # Process each text in the batch individually
-        # (Gemini embed_content supports single content per call)
         for text in batch:
             try:
                 truncated = text[:8000] if text else ""
@@ -107,7 +121,7 @@ def generate_embeddings_batch(
                     all_embeddings.append([0.0] * Config.EMBEDDING_DIMENSIONS)
                     continue
 
-                result = client.models.embed_content(
+                result = gemini.models.embed_content(
                     model=Config.EMBEDDING_MODEL,
                     contents=truncated,
                 )
@@ -117,7 +131,6 @@ def generate_embeddings_batch(
                 print(f"    [Embeddings] Error embedding text: {e}")
                 all_embeddings.append([0.0] * Config.EMBEDDING_DIMENSIONS)
 
-        # Rate limit pause between batches
         if i + batch_size < total:
             time.sleep(delay_between_batches)
 

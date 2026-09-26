@@ -14,11 +14,62 @@ from config import Config
 _client = None
 
 
-def _get_client() -> genai.Client:
+_client = None
+_groq_client = None
+
+
+def _get_gemini_client():
     global _client
-    if _client is None:
+    if _client is None and Config.GEMINI_API_KEY:
+        from google import genai
         _client = genai.Client(api_key=Config.GEMINI_API_KEY)
     return _client
+
+
+def _get_groq_client():
+    global _groq_client
+    if _groq_client is None and Config.GROQ_API_KEY:
+        from groq import Groq
+        _groq_client = Groq(api_key=Config.GROQ_API_KEY)
+    return _groq_client
+
+
+def _call_llm(prompt: str) -> str:
+    """Call Groq (primary) or Gemini to generate structured fit analysis."""
+    # 1. Try Groq
+    groq = _get_groq_client()
+    if groq is not None:
+        try:
+            resp = groq.chat.completions.create(
+                model=Config.GROQ_MODEL,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are an expert career advisor and job matching AI. Return ONLY a valid JSON object without markdown formatting.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.2,
+                max_tokens=600,
+            )
+            content = resp.choices[0].message.content or ""
+            return content.strip()
+        except Exception as e:
+            print(f"[Scorer] Groq evaluation failed, trying fallback: {e}")
+
+    # 2. Try Gemini
+    gemini = _get_gemini_client()
+    if gemini is not None:
+        try:
+            response = gemini.models.generate_content(
+                model=Config.LLM_MODEL,
+                contents=prompt,
+            )
+            return response.text.strip()
+        except Exception as e:
+            print(f"[Scorer] Gemini evaluation failed: {e}")
+
+    return ""
 
 
 def score_job_fit(
@@ -29,7 +80,7 @@ def score_job_fit(
     cosine_similarity: float,
 ) -> dict:
     """
-    Use Gemini Flash to generate a detailed fit analysis between
+    Use Groq (or Gemini Flash) to generate a detailed fit analysis between
     a candidate's resume and a specific job posting.
 
     Returns a dict with:
@@ -39,11 +90,7 @@ def score_job_fit(
       - tailored_pitch: str (2-3 sentence elevator pitch)
       - recruiter_message: str (short email template)
     """
-    client = _get_client()
-
-    prompt = f"""You are an expert career advisor and job matching AI.
-
-Given a candidate's resume and a job posting, analyze the fit and return a JSON response.
+    prompt = f"""Given a candidate's resume and a job posting, analyze the fit and return a JSON response.
 
 CANDIDATE RESUME:
 {resume_text[:3000]}
@@ -65,13 +112,10 @@ Return ONLY valid JSON (no markdown, no code fences) with these exact keys:
 }}"""
 
     try:
-        response = client.models.generate_content(
-            model=Config.LLM_MODEL,
-            contents=prompt,
-        )
+        text = _call_llm(prompt)
+        if not text:
+            return _fallback_score(resume_text, job_title, job_company, job_description, cosine_similarity)
 
-        # Parse the JSON response
-        text = response.text.strip()
         # Clean potential markdown code fences
         if text.startswith("```"):
             text = text.split("\n", 1)[1] if "\n" in text else text[3:]

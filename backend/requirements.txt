@@ -8,7 +8,11 @@ beautifulsoup4>=4.12.0
 # Supabase Python client (includes pgvector support)
 supabase>=2.4.0
 
-# Google Gemini free-tier for embeddings & LLM scoring
+# AI Engine: Groq (free LLM) and FastEmbed (local 768-dim embeddings)
+groq>=1.7.0
+fastembed>=0.8.0
+
+# Google Gemini (optional fallback)
 google-genai>=1.0.0
 
 # Utilities

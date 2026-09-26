@@ -17,7 +17,8 @@ class Config:
     SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
     SUPABASE_KEY: str = os.getenv("SUPABASE_SERVICE_KEY") or os.getenv("SUPABASE_KEY", "")
 
-    # Google Gemini
+    # AI Providers
+    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
 
     # Scraper settings
@@ -49,8 +50,9 @@ class Config:
     SCRAPE_INTERVAL_HOURS: int = int(os.getenv("SCRAPE_INTERVAL_HOURS", "6"))
 
     # Embedding model config
-    EMBEDDING_MODEL: str = "text-embedding-004"
+    EMBEDDING_MODEL: str = "BAAI/bge-base-en-v1.5"  # 768-dim local FastEmbed
     EMBEDDING_DIMENSIONS: int = 768
+    GROQ_MODEL: str = "qwen/qwen3.8-27b"
     LLM_MODEL: str = "gemini-2.0-flash"
 
     @classmethod
@@ -61,8 +63,8 @@ class Config:
             missing.append("SUPABASE_URL")
         if not cls.SUPABASE_KEY:
             missing.append("SUPABASE_KEY")
-        if not cls.GEMINI_API_KEY:
-            missing.append("GEMINI_API_KEY")
+        if not cls.GROQ_API_KEY and not cls.GEMINI_API_KEY:
+            missing.append("GROQ_API_KEY (or GEMINI_API_KEY)")
         return missing
 
     @classmethod
