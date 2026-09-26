@@ -72,6 +72,13 @@ class _CustomScraperDialogState extends State<CustomScraperDialog> {
             _isLoading = false;
           });
           backendSuccess = true;
+        } else if (resp.statusCode == 429) {
+          setState(() {
+            _errorMessage = 'Rate limit reached (Too many requests). Please wait a moment before scraping again.';
+            _sourceStatus = 'Rate limit exceeded (HTTP 429)';
+            _isLoading = false;
+          });
+          return;
         }
       } catch (_) {
         // Backend not currently running on 8000; will use smart direct browser client fallback

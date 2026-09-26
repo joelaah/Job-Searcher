@@ -18,5 +18,7 @@ google-genai>=1.0.0
 # Utilities
 python-dotenv>=1.0.0
 
-# Optional: scheduling the scraper on a timer
-schedule>=1.2.0
+# Web API & Rate Limiting
+fastapi>=0.110.0
+uvicorn>=0.28.0
+slowapi>=0.1.10
