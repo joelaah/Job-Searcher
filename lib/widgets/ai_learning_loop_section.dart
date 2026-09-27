@@ -14,7 +14,8 @@ class AiLearningLoopSection extends StatefulWidget {
   State<AiLearningLoopSection> createState() => _AiLearningLoopSectionState();
 }
 
-class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with SingleTickerProviderStateMixin {
+class _AiLearningLoopSectionState extends State<AiLearningLoopSection>
+    with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
   final TextEditingController _roleInputController = TextEditingController();
@@ -91,16 +92,25 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
                                 return Transform.scale(
                                   scale: _pulseAnimation.value,
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: AppColors.secondary.withAlpha(30),
                                       borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(color: AppColors.secondary),
+                                      border: Border.all(
+                                        color: AppColors.secondary,
+                                      ),
                                     ),
                                     child: const Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Icon(Icons.auto_awesome, size: 12, color: AppColors.secondary),
+                                        Icon(
+                                          Icons.auto_awesome,
+                                          size: 12,
+                                          color: AppColors.secondary,
+                                        ),
                                         SizedBox(width: 5),
                                         Text(
                                           'AUTONOMOUS LEARNING LOOP',
@@ -119,11 +129,16 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
                             ),
                             const SizedBox(width: 10),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColors.primary.withAlpha(25),
                                 borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: AppColors.primary.withAlpha(70)),
+                                border: Border.all(
+                                  color: AppColors.primary.withAlpha(70),
+                                ),
                               ),
                               child: const Text(
                                 '768-D Vector Steering',
@@ -138,7 +153,9 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
                         ),
                         const SizedBox(height: 10),
                         ShaderMask(
-                          shaderCallback: (bounds) => AppColors.emeraldBlueGradient.createShader(bounds),
+                          shaderCallback: (bounds) => AppColors
+                              .emeraldBlueGradient
+                              .createShader(bounds),
                           child: const Text(
                             'Continuous Latent Vector Adaptation Engine',
                             style: TextStyle(
@@ -164,12 +181,21 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
 
                   // Modal Launcher Button
                   OutlinedButton.icon(
-                    icon: const Icon(Icons.analytics_outlined, size: 16, color: AppColors.cyanAccent),
+                    icon: const Icon(
+                      Icons.analytics_outlined,
+                      size: 16,
+                      color: AppColors.cyanAccent,
+                    ),
                     label: const Text('Detailed Insights'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.cyanAccent,
-                      side: BorderSide(color: AppColors.cyanAccent.withAlpha(120)),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      side: BorderSide(
+                        color: AppColors.cyanAccent.withAlpha(120),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                     ),
                     onPressed: () {
                       showDialog(
@@ -194,13 +220,30 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Card 1: 2D Constellation Visualizer
-                    Expanded(flex: 4, child: _buildConstellationCard(context, state, percentage)),
+                    Expanded(
+                      flex: 4,
+                      child: _buildConstellationCard(
+                        context,
+                        state,
+                        percentage,
+                      ),
+                    ),
                     const SizedBox(width: 18),
                     // Card 2: Career Alignment & Skill Gravity
-                    Expanded(flex: 5, child: _buildCareerAlignmentCard(context, state)),
+                    Expanded(
+                      flex: 5,
+                      child: _buildCareerAlignmentCard(context, state),
+                    ),
                     const SizedBox(width: 18),
                     // Card 3: Live Synapse Console & Simulator
-                    Expanded(flex: 3, child: _buildTelemetryConsoleCard(context, state, percentage)),
+                    Expanded(
+                      flex: 3,
+                      child: _buildTelemetryConsoleCard(
+                        context,
+                        state,
+                        percentage,
+                      ),
+                    ),
                   ],
                 )
               else if (isTablet)
@@ -211,9 +254,17 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(child: _buildCareerAlignmentCard(context, state)),
+                        Expanded(
+                          child: _buildCareerAlignmentCard(context, state),
+                        ),
                         const SizedBox(width: 16),
-                        Expanded(child: _buildTelemetryConsoleCard(context, state, percentage)),
+                        Expanded(
+                          child: _buildTelemetryConsoleCard(
+                            context,
+                            state,
+                            percentage,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -237,7 +288,11 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
 
   // ──────────────────── Card 1: Latent Space Constellation Visualizer ────────────────────
 
-  Widget _buildConstellationCard(BuildContext context, JobState state, int percentage) {
+  Widget _buildConstellationCard(
+    BuildContext context,
+    JobState state,
+    int percentage,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surfaceCard,
@@ -249,19 +304,26 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 6,
             children: [
               const Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.radar, size: 16, color: AppColors.secondary),
                   SizedBox(width: 6),
-                  Text(
-                    'Latent Space Constellation',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                  Flexible(
+                    child: Text(
+                      'Latent Space Constellation',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -318,9 +380,15 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
               children: [
                 _buildMetricRow('Active Center', 'Alex Vance (768-D Vector)'),
                 const Divider(height: 10, color: AppColors.surfaceBorder),
-                _buildMetricRow('Drift Metric', 'Cosine Angular Distance (1 - u·v)'),
+                _buildMetricRow(
+                  'Drift Metric',
+                  'Cosine Angular Distance (1 - u·v)',
+                ),
                 const Divider(height: 10, color: AppColors.surfaceBorder),
-                _buildMetricRow('Latent Shift', '$percentage% Personalized Gravitation'),
+                _buildMetricRow(
+                  'Latent Shift',
+                  '$percentage% Personalized Gravitation',
+                ),
               ],
             ),
           ),
@@ -333,8 +401,30 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(fontSize: 10.5, color: AppColors.textMuted)),
-        Text(value, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+        Flexible(
+          flex: 2,
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 10.5, color: AppColors.textMuted),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Flexible(
+          flex: 3,
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: const TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+        ),
       ],
     );
   }
@@ -357,12 +447,20 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
         mainAxisSize: MainAxisSize.min,
         children: [
           // Header Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 6,
             children: [
               const Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.explore_outlined, size: 17, color: AppColors.cyanAccent),
+                  Icon(
+                    Icons.explore_outlined,
+                    size: 17,
+                    color: AppColors.cyanAccent,
+                  ),
                   SizedBox(width: 8),
                   Text(
                     'Career Alignment & Gravity',
@@ -381,11 +479,16 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
                     onTap: () => bloc.add(SyncSteeringToResume()),
                     borderRadius: BorderRadius.circular(6),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withAlpha(30),
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: AppColors.primary.withAlpha(90)),
+                        border: Border.all(
+                          color: AppColors.primary.withAlpha(90),
+                        ),
                       ),
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
@@ -409,7 +512,10 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
                     onTap: () => bloc.add(ResetCareerAlignment()),
                     borderRadius: BorderRadius.circular(6),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.surfaceElevated,
                         borderRadius: BorderRadius.circular(6),
@@ -460,7 +566,8 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
                 ),
                 Expanded(
                   child: Text(
-                    state.userProfile.resumeFileName ?? 'Candidate Resume Profile',
+                    state.userProfile.resumeFileName ??
+                        'Candidate Resume Profile',
                     style: const TextStyle(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w700,
@@ -476,16 +583,28 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
           const SizedBox(height: 14),
 
           // 1. Target Roles (Dynamic Pills + Custom Input)
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          const Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 6,
+            runSpacing: 4,
             children: [
               Text(
                 '1. TARGET ROLES (TYPE ANY ROLE OR USE PILLS)',
-                style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: AppColors.textMuted, letterSpacing: 0.6),
+                style: TextStyle(
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textMuted,
+                  letterSpacing: 0.6,
+                ),
               ),
               Text(
                 'Unlimited roles',
-                style: TextStyle(fontSize: 9.5, color: AppColors.cyanAccent, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontSize: 9.5,
+                  color: AppColors.cyanAccent,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -501,19 +620,30 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
                 decoration: BoxDecoration(
                   color: AppColors.cyanAccent.withAlpha(25),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.cyanAccent.withAlpha(100), width: 1.1),
+                  border: Border.all(
+                    color: AppColors.cyanAccent.withAlpha(100),
+                    width: 1.1,
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       role,
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                     const SizedBox(width: 5),
                     InkWell(
                       onTap: () => bloc.add(RemoveTargetRole(role)),
-                      child: const Icon(Icons.close, size: 12, color: AppColors.textSecondary),
+                      child: const Icon(
+                        Icons.close,
+                        size: 12,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -538,10 +668,17 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
                 Expanded(
                   child: TextField(
                     controller: _roleInputController,
-                    style: const TextStyle(fontSize: 11.5, color: AppColors.textPrimary),
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      color: AppColors.textPrimary,
+                    ),
                     decoration: const InputDecoration(
-                      hintText: 'Type any role (e.g. "DevOps Intern", "QA Automation", "React Dev")...',
-                      hintStyle: TextStyle(fontSize: 10.5, color: AppColors.textMuted),
+                      hintText:
+                          'Type any role (e.g. "DevOps Intern", "QA Automation", "React Dev")...',
+                      hintStyle: TextStyle(
+                        fontSize: 10.5,
+                        color: AppColors.textMuted,
+                      ),
                       border: InputBorder.none,
                       isDense: true,
                     ),
@@ -561,15 +698,24 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
                     }
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3.5,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withAlpha(35),
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: AppColors.primary.withAlpha(100)),
+                      border: Border.all(
+                        color: AppColors.primary.withAlpha(100),
+                      ),
                     ),
                     child: const Text(
                       '+ Add Role',
-                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.primary),
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary,
+                      ),
                     ),
                   ),
                 ),
@@ -583,31 +729,56 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
           Wrap(
             spacing: 5,
             runSpacing: 4,
-            children: [
-              '🎓 Software Engineer Intern',
-              '🌱 DevOps Intern',
-              '⚡ Junior Full-Stack',
-              '🧠 AI Platform Engineer',
-              '🛠️ QA Automation',
-            ].where((s) => !state.targetRoles.any((r) => r.toLowerCase() == s.replaceAll(RegExp(r'[^\w\s\-]'), '').trim().toLowerCase())).take(3).map((suggestion) {
-              final cleanName = suggestion.replaceAll(RegExp(r'[^\w\s\-]'), '').trim();
-              return InkWell(
-                onTap: () => bloc.add(AddTargetRole(cleanName)),
-                borderRadius: BorderRadius.circular(6),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: AppColors.surfaceBorder.withAlpha(90)),
-                  ),
-                  child: Text(
-                    '+ $suggestion',
-                    style: const TextStyle(fontSize: 9.5, color: AppColors.textMuted, fontWeight: FontWeight.w600),
-                  ),
-                ),
-              );
-            }).toList(),
+            children:
+                [
+                      '🎓 Software Engineer Intern',
+                      '🌱 DevOps Intern',
+                      '⚡ Junior Full-Stack',
+                      '🧠 AI Platform Engineer',
+                      '🛠️ QA Automation',
+                    ]
+                    .where(
+                      (s) => !state.targetRoles.any(
+                        (r) =>
+                            r.toLowerCase() ==
+                            s
+                                .replaceAll(RegExp(r'[^\w\s\-]'), '')
+                                .trim()
+                                .toLowerCase(),
+                      ),
+                    )
+                    .take(3)
+                    .map((suggestion) {
+                      final cleanName = suggestion
+                          .replaceAll(RegExp(r'[^\w\s\-]'), '')
+                          .trim();
+                      return InkWell(
+                        onTap: () => bloc.add(AddTargetRole(cleanName)),
+                        borderRadius: BorderRadius.circular(6),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2.5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: AppColors.surfaceBorder.withAlpha(90),
+                            ),
+                          ),
+                          child: Text(
+                            '+ $suggestion',
+                            style: const TextStyle(
+                              fontSize: 9.5,
+                              color: AppColors.textMuted,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      );
+                    })
+                    .toList(),
           ),
 
           const SizedBox(height: 14),
@@ -615,7 +786,12 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
           // 2. Experience Level (Universal Spectrum from Intern to Lead)
           const Text(
             '2. EXPERIENCE LEVEL (WELCOMING 0-EXP & INTERNS)',
-            style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: AppColors.textMuted, letterSpacing: 0.6),
+            style: TextStyle(
+              fontSize: 9.5,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textMuted,
+              letterSpacing: 0.6,
+            ),
           ),
           const SizedBox(height: 6),
           Wrap(
@@ -624,33 +800,49 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
             children: [
               _buildFilterBadge(
                 label: '🎓 Intern / Co-op (0 yrs)',
-                isSelected: state.selectedSeniorities.contains('🎓 Intern / Co-op'),
+                isSelected: state.selectedSeniorities.contains(
+                  '🎓 Intern / Co-op',
+                ),
                 activeColor: const Color(0xFF38BDF8),
-                onTap: () => bloc.add(ToggleSeniorityFilter('🎓 Intern / Co-op')),
+                onTap: () =>
+                    bloc.add(ToggleSeniorityFilter('🎓 Intern / Co-op')),
               ),
               _buildFilterBadge(
                 label: '🌱 Junior (0–2 yrs)',
-                isSelected: state.selectedSeniorities.contains('🌱 Junior (0–2 yrs)'),
+                isSelected: state.selectedSeniorities.contains(
+                  '🌱 Junior (0–2 yrs)',
+                ),
                 activeColor: AppColors.matchHigh,
-                onTap: () => bloc.add(ToggleSeniorityFilter('🌱 Junior (0–2 yrs)')),
+                onTap: () =>
+                    bloc.add(ToggleSeniorityFilter('🌱 Junior (0–2 yrs)')),
               ),
               _buildFilterBadge(
                 label: '⚡ Mid-Level (2–5 yrs)',
-                isSelected: state.selectedSeniorities.contains('⚡ Mid-Level (2–5 yrs)'),
+                isSelected: state.selectedSeniorities.contains(
+                  '⚡ Mid-Level (2–5 yrs)',
+                ),
                 activeColor: AppColors.cyanAccent,
-                onTap: () => bloc.add(ToggleSeniorityFilter('⚡ Mid-Level (2–5 yrs)')),
+                onTap: () =>
+                    bloc.add(ToggleSeniorityFilter('⚡ Mid-Level (2–5 yrs)')),
               ),
               _buildFilterBadge(
                 label: '🛠️ Senior (5+ yrs)',
-                isSelected: state.selectedSeniorities.contains('🛠️ Senior (5+ yrs)'),
+                isSelected: state.selectedSeniorities.contains(
+                  '🛠️ Senior (5+ yrs)',
+                ),
                 activeColor: AppColors.primary,
-                onTap: () => bloc.add(ToggleSeniorityFilter('🛠️ Senior (5+ yrs)')),
+                onTap: () =>
+                    bloc.add(ToggleSeniorityFilter('🛠️ Senior (5+ yrs)')),
               ),
               _buildFilterBadge(
                 label: '👑 Lead / Staff / Architect',
-                isSelected: state.selectedSeniorities.contains('👑 Lead / Staff / Architect'),
+                isSelected: state.selectedSeniorities.contains(
+                  '👑 Lead / Staff / Architect',
+                ),
                 activeColor: const Color(0xFFA78BFA),
-                onTap: () => bloc.add(ToggleSeniorityFilter('👑 Lead / Staff / Architect')),
+                onTap: () => bloc.add(
+                  ToggleSeniorityFilter('👑 Lead / Staff / Architect'),
+                ),
               ),
             ],
           ),
@@ -660,7 +852,12 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
           // 3. Environment & Scale
           const Text(
             '3. ENVIRONMENT & SCALE',
-            style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: AppColors.textMuted, letterSpacing: 0.6),
+            style: TextStyle(
+              fontSize: 9.5,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textMuted,
+              letterSpacing: 0.6,
+            ),
           ),
           const SizedBox(height: 6),
           Wrap(
@@ -669,21 +866,31 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
             children: [
               _buildFilterBadge(
                 label: '🚀 Early Startup (0→1)',
-                isSelected: state.selectedCompanyStages.any((s) => s.contains('Startup')),
+                isSelected: state.selectedCompanyStages.any(
+                  (s) => s.contains('Startup'),
+                ),
                 activeColor: AppColors.matchHigh,
-                onTap: () => bloc.add(ToggleCompanyStageFilter('🚀 Early Startup (0→1)')),
+                onTap: () => bloc.add(
+                  ToggleCompanyStageFilter('🚀 Early Startup (0→1)'),
+                ),
               ),
               _buildFilterBadge(
                 label: '⚡ Growth Scaleup',
-                isSelected: state.selectedCompanyStages.any((s) => s.contains('Scaleup')),
+                isSelected: state.selectedCompanyStages.any(
+                  (s) => s.contains('Scaleup'),
+                ),
                 activeColor: AppColors.cyanAccent,
-                onTap: () => bloc.add(ToggleCompanyStageFilter('⚡ Growth Scaleup')),
+                onTap: () =>
+                    bloc.add(ToggleCompanyStageFilter('⚡ Growth Scaleup')),
               ),
               _buildFilterBadge(
                 label: '🏢 Enterprise Scale',
-                isSelected: state.selectedCompanyStages.any((s) => s.contains('Enterprise')),
+                isSelected: state.selectedCompanyStages.any(
+                  (s) => s.contains('Enterprise'),
+                ),
                 activeColor: AppColors.primary,
-                onTap: () => bloc.add(ToggleCompanyStageFilter('🏢 Enterprise Scale')),
+                onTap: () =>
+                    bloc.add(ToggleCompanyStageFilter('🏢 Enterprise Scale')),
               ),
             ],
           ),
@@ -691,16 +898,28 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
           const SizedBox(height: 14),
 
           // 4. Resume Skill Gravity (Dynamically extracted from CV)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 4,
             children: [
               const Text(
                 '4. RESUME SKILL GRAVITY',
-                style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: AppColors.textMuted, letterSpacing: 0.6),
+                style: TextStyle(
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textMuted,
+                  letterSpacing: 0.6,
+                ),
               ),
               Text(
                 'Tap skill to boost (+10%)',
-                style: TextStyle(fontSize: 9.5, color: AppColors.cyanAccent.withAlpha(220), fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontSize: 9.5,
+                  color: AppColors.cyanAccent.withAlpha(220),
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -715,7 +934,10 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
                 borderRadius: BorderRadius.circular(8),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 4.5,
+                  ),
                   decoration: BoxDecoration(
                     color: isBoosted
                         ? AppColors.matchHigh.withAlpha(28)
@@ -740,15 +962,23 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (isBoosted) ...[
-                        const Icon(Icons.star_rounded, size: 12, color: AppColors.matchHigh),
+                        const Icon(
+                          Icons.star_rounded,
+                          size: 12,
+                          color: AppColors.matchHigh,
+                        ),
                         const SizedBox(width: 4),
                       ],
                       Text(
                         skill,
                         style: TextStyle(
                           fontSize: 11,
-                          fontWeight: isBoosted ? FontWeight.w800 : FontWeight.w600,
-                          color: isBoosted ? AppColors.textPrimary : AppColors.textSecondary,
+                          fontWeight: isBoosted
+                              ? FontWeight.w800
+                              : FontWeight.w600,
+                          color: isBoosted
+                              ? AppColors.textPrimary
+                              : AppColors.textSecondary,
                         ),
                       ),
                       if (isBoosted) ...[
@@ -784,13 +1014,21 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
               children: [
                 const Padding(
                   padding: EdgeInsets.only(top: 1),
-                  child: Icon(Icons.bolt, size: 14, color: AppColors.cyanAccent),
+                  child: Icon(
+                    Icons.bolt,
+                    size: 14,
+                    color: AppColors.cyanAccent,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     state.activeAlignmentSummary,
-                    style: const TextStyle(fontSize: 11, color: AppColors.textPrimary, height: 1.35),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textPrimary,
+                      height: 1.35,
+                    ),
                   ),
                 ),
               ],
@@ -842,7 +1080,9 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+                color: isSelected
+                    ? AppColors.textPrimary
+                    : AppColors.textSecondary,
               ),
             ),
           ],
@@ -853,7 +1093,11 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
 
   // ──────────────────── Card 3: Telemetry Console & Simulator ────────────────────
 
-  Widget _buildTelemetryConsoleCard(BuildContext context, JobState state, int percentage) {
+  Widget _buildTelemetryConsoleCard(
+    BuildContext context,
+    JobState state,
+    int percentage,
+  ) {
     final bloc = context.read<JobBloc>();
 
     return Container(
@@ -870,19 +1114,25 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
-                children: [
-                  Icon(Icons.terminal, size: 16, color: AppColors.secondary),
-                  SizedBox(width: 6),
-                  Text(
-                    'Live Synapse Console',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+              const Flexible(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.terminal, size: 16, color: AppColors.secondary),
+                    SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        'Live Synapse Console',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               Container(
                 width: 7,
@@ -908,13 +1158,25 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildTerminalLine('[02:14:28]', 'pgvector HNSW index initialized (m=16)'),
+                _buildTerminalLine(
+                  '[02:14:28]',
+                  'pgvector HNSW index initialized (m=16)',
+                ),
                 const SizedBox(height: 4),
-                _buildTerminalLine('[02:14:35]', 'Candidate vector: 768-D norm calibrated'),
+                _buildTerminalLine(
+                  '[02:14:35]',
+                  'Candidate vector: 768-D norm calibrated',
+                ),
                 const SizedBox(height: 4),
-                _buildTerminalLine('[02:14:42]', 'Shift magnitude at $percentage% (+${state.totalSavedCount} saved, +${state.totalAppliedCount} applied)'),
+                _buildTerminalLine(
+                  '[02:14:42]',
+                  'Shift magnitude at $percentage% (+${state.totalSavedCount} saved, +${state.totalAppliedCount} applied)',
+                ),
                 const SizedBox(height: 4),
-                _buildTerminalLine('[02:14:50]', 'Tactile biases applied to HNSW distance function'),
+                _buildTerminalLine(
+                  '[02:14:50]',
+                  'Tactile biases applied to HNSW distance function',
+                ),
               ],
             ),
           ),
@@ -924,7 +1186,11 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
           // Interactive Simulation Buttons
           const Text(
             'Interactive Vector Steering Sandbox:',
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textMuted),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textMuted,
+            ),
           ),
           const SizedBox(height: 8),
 
@@ -933,10 +1199,13 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
               Expanded(
                 child: InkWell(
                   onTap: () {
-                    bloc.add(SimulateVectorShift(
-                      delta: 0.06,
-                      insight: 'Manual boost: Accelerated vector affinity towards pgvector + Supabase stack (+6%)',
-                    ));
+                    bloc.add(
+                      SimulateVectorShift(
+                        delta: 0.06,
+                        insight:
+                            'Manual boost: Accelerated vector affinity towards pgvector + Supabase stack (+6%)',
+                      ),
+                    );
                   },
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
@@ -944,19 +1213,28 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
                     decoration: BoxDecoration(
                       color: AppColors.secondary.withAlpha(25),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.secondary.withAlpha(90)),
+                      border: Border.all(
+                        color: AppColors.secondary.withAlpha(90),
+                      ),
                     ),
                     alignment: Alignment.center,
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.add, size: 12, color: AppColors.secondary),
-                        SizedBox(width: 4),
-                        Text(
-                          '+Boost Affinity',
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.secondary),
-                        ),
-                      ],
+                    child: const FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.add, size: 12, color: AppColors.secondary),
+                          SizedBox(width: 4),
+                          Text(
+                            '+Boost Affinity',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.secondary,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -976,16 +1254,27 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection> with Sing
                       border: Border.all(color: AppColors.surfaceBorder),
                     ),
                     alignment: Alignment.center,
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.refresh, size: 12, color: AppColors.textMuted),
-                        SizedBox(width: 4),
-                        Text(
-                          'Reset Drift',
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
-                        ),
-                      ],
+                    child: const FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.refresh,
+                            size: 12,
+                            color: AppColors.textMuted,
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            'Reset Drift',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

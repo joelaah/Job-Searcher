@@ -37,6 +37,12 @@ class Config:
         if c.strip()
     ]
 
+    ASHBY_COMPANIES: list[str] = [
+        c.strip()
+        for c in os.getenv("ASHBY_COMPANIES", "flutterflow,yadda,linear").split(",")
+        if c.strip()
+    ]
+
     JOB_KEYWORDS: list[str] = [
         k.strip().lower()
         for k in os.getenv(

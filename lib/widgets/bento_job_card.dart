@@ -232,9 +232,14 @@ class _BentoJobCardState extends State<BentoJobCard> {
                   children: [
                     const Icon(Icons.location_on_outlined, size: 13, color: AppColors.textMuted),
                     const SizedBox(width: 3),
-                    Text(
-                      job.location,
-                      style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 160),
+                      child: Text(
+                        job.location,
+                        style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                     ),
                   ],
                 ),

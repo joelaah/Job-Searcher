@@ -257,10 +257,16 @@ class HomeScreen extends StatelessWidget {
   // ──────────────────── Results Header ────────────────────
 
   Widget _buildResultsHeader(int matchCount, int minScore) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 12,
+      runSpacing: 10,
       children: [
-        Row(
+        Wrap(
+          spacing: 10,
+          runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -285,7 +291,6 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 10),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(

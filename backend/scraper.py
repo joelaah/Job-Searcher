@@ -356,7 +356,42 @@ class AshbyScraper:
 # ──────────────────────────────────────────
 
 class GenericWebScraper:
-    """Heuristic crawler for arbitrary company career pages."""
+    """Heuristic crawler for arbitrary company career pages with Scrapling anti-bot fallback."""
+
+    @staticmethod
+    def _is_cloudflare_blocked(status_code: int, html_text: str) -> bool:
+        """Detect if Cloudflare or anti-bot challenge blocked the request."""
+        if status_code in (403, 503):
+            return True
+        sample = (html_text or "")[:2500].lower()
+        signals = [
+            "cloudflare",
+            "turnstile",
+            "just a moment...",
+            "checking your browser",
+            "enable javascript and cookies",
+            "cf-chl-bypass",
+            "cf-mitigated",
+            "attention required! | cloudflare",
+        ]
+        return any(s in sample for s in signals)
+
+    @staticmethod
+    def _fetch_with_scrapling(url: str) -> str:
+        """Fallback engine: Uses Scrapling's StealthyFetcher to bypass Cloudflare Turnstile."""
+        try:
+            from scrapling.fetchers import StealthyFetcher
+            print(f"  [Scrapling] Engaging StealthyFetcher for anti-bot bypass on {url}...")
+            fetcher = StealthyFetcher()
+            # solve_cloudflare=True automatically solves Cloudflare Turnstile / verification challenges
+            page = fetcher.fetch(url, solve_cloudflare=True)
+            return page.html or ""
+        except ImportError:
+            print("  [Scrapling] scrapling package not available.")
+            return ""
+        except Exception as e:
+            print(f"  [Scrapling] StealthyFetcher bypass failed: {e}")
+            return ""
 
     def scrape(self, url: str, max_jobs: int = 40) -> list[ScrapedJob]:
         jobs = []
@@ -368,11 +403,25 @@ class GenericWebScraper:
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         }
 
+        html_content = ""
         try:
-            print(f"  [GenericCrawler] Crawling {url}...")
-            resp = requests.get(url, headers=headers, timeout=15)
-            resp.raise_for_status()
-            soup = BeautifulSoup(resp.text, "html.parser")
+            print(f"  [GenericCrawler] Fast crawl: {url}...")
+            resp = requests.get(url, headers=headers, timeout=12)
+            if self._is_cloudflare_blocked(resp.status_code, resp.text):
+                print(f"  [GenericCrawler] Cloudflare challenge detected ({resp.status_code}). Triggering Scrapling fallback...")
+                html_content = self._fetch_with_scrapling(url)
+            else:
+                resp.raise_for_status()
+                html_content = resp.text
+        except requests.RequestException as e:
+            print(f"  [GenericCrawler] Direct request failed ({e}). Falling back to Scrapling...")
+            html_content = self._fetch_with_scrapling(url)
+
+        if not html_content:
+            return []
+
+        try:
+            soup = BeautifulSoup(html_content, "html.parser")
 
             # Extract company name from meta or title
             company = "Target Company"
@@ -440,7 +489,7 @@ class GenericWebScraper:
 
             print(f"  [GenericCrawler] Found {len(jobs)} postings from {url}")
         except Exception as e:
-            print(f"  [GenericCrawler] Error crawling {url}: {e}")
+            print(f"  [GenericCrawler] Error parsing {url}: {e}")
 
         return jobs
 
@@ -520,6 +569,13 @@ def scrape_all_sources() -> list[ScrapedJob]:
     # Lever companies
     for company in Config.LEVER_COMPANIES:
         jobs = lever.scrape(company, max_jobs=max_per)
+        all_jobs.extend(jobs)
+        time.sleep(0.5)
+
+    # Ashby companies
+    ashby = AshbyScraper()
+    for company in Config.ASHBY_COMPANIES:
+        jobs = ashby.scrape(company, max_jobs=max_per)
         all_jobs.extend(jobs)
         time.sleep(0.5)
 

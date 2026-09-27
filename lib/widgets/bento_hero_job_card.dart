@@ -219,7 +219,10 @@ class _BentoHeroJobCardState extends State<BentoHeroJobCard> {
                         ),
                       ),
                       const SizedBox(height: 5),
-                      Row(
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 6,
+                        runSpacing: 4,
                         children: [
                           Text(
                             job.company,
@@ -229,19 +232,14 @@ class _BentoHeroJobCardState extends State<BentoHeroJobCard> {
                               color: AppColors.cyanAccent,
                             ),
                           ),
-                          const SizedBox(width: 5),
                           const Icon(Icons.verified, size: 14, color: AppColors.cyanAccent),
-                          const SizedBox(width: 10),
                           const Text('•', style: TextStyle(color: AppColors.textMuted)),
-                          const SizedBox(width: 10),
                           const Icon(Icons.location_on_outlined, size: 15, color: AppColors.textMuted),
-                          const SizedBox(width: 4),
                           Text(
                             job.location,
                             style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
                           ),
-                          if (job.isRemote) ...[
-                            const SizedBox(width: 10),
+                          if (job.isRemote)
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
@@ -254,7 +252,6 @@ class _BentoHeroJobCardState extends State<BentoHeroJobCard> {
                                 style: TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w700),
                               ),
                             ),
-                          ],
                         ],
                       ),
                     ],

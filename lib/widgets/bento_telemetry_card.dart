@@ -37,29 +37,34 @@ class BentoTelemetryCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.secondary.withAlpha(35),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppColors.secondary.withAlpha(80)),
+                  Flexible(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.secondary.withAlpha(35),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: AppColors.secondary.withAlpha(80)),
+                          ),
+                          child: const Icon(Icons.auto_awesome, size: 16, color: AppColors.secondary),
                         ),
-                        child: const Icon(Icons.auto_awesome, size: 16, color: AppColors.secondary),
-                      ),
-                      const SizedBox(width: 10),
-                      const Text(
-                        'AI Learning Loop',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                          letterSpacing: -0.3,
+                        const SizedBox(width: 10),
+                        const Flexible(
+                          child: Text(
+                            'AI Learning Loop',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textPrimary,
+                              letterSpacing: -0.3,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.open_in_new, size: 16, color: AppColors.textMuted),
@@ -147,10 +152,11 @@ class BentoTelemetryCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Row(
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
                           children: [
                             _buildStatBadge(Icons.bookmark_added_outlined, '${state.totalSavedCount}', 'Saved', AppColors.cyanAccent),
-                            const SizedBox(width: 8),
                             _buildStatBadge(Icons.send_outlined, '${state.totalAppliedCount}', 'Applied', AppColors.matchHigh),
                           ],
                         ),
@@ -182,22 +188,25 @@ class BentoTelemetryCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: AppColors.surfaceBorder),
                   ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.insights, size: 14, color: AppColors.secondary),
-                      SizedBox(width: 6),
-                      Text(
-                        'Explore Learning Insights',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
+                  child: const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.insights, size: 14, color: AppColors.secondary),
+                        SizedBox(width: 6),
+                        Text(
+                          'Explore Learning Insights',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
-                      ),
-                      SizedBox(width: 4),
-                      Icon(Icons.chevron_right, size: 14, color: AppColors.textMuted),
-                    ],
+                        SizedBox(width: 4),
+                        Icon(Icons.chevron_right, size: 14, color: AppColors.textMuted),
+                      ],
+                    ),
                   ),
                 ),
               ),

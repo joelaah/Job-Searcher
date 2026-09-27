@@ -68,3 +68,22 @@ ENV/
 *.webp
 *.log
 
+# Personal testing scripts & local test outputs (NEVER in git or web app)
+backend/search_*.py
+backend/test_*.py
+backend/joel_*.py
+backend/*_matches.json
+backend/joel_*.json
+backend/discovered_internships.json
+backend/evaluated_roles.json
+backend/find_internships.py
+backend/score_curated.py
+*_matches.json
+joel_*.json
+*.pdf
+
+# Graphify knowledge graph outputs
+graphify-out/
+.graphify*
+
+
