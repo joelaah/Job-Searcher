@@ -71,6 +71,7 @@ ENV/
 # Personal testing scripts & local test outputs (NEVER in git or web app)
 backend/search_*.py
 backend/test_*.py
+!backend/test_server.py
 backend/joel_*.py
 backend/*_matches.json
 backend/joel_*.json

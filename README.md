@@ -3,103 +3,193 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Flutter-3.x%20Web-02569B?logo=flutter&logoColor=white" alt="Flutter Web" />
   <img src="https://img.shields.io/badge/Python-3.12%20FastAPI-009688?logo=fastapi&logoColor=white" alt="FastAPI" />
-  <img src="https://img.shields.io/badge/Supabase-pgvector-3ECF8E?logo=supabase&logoColor=white" alt="Supabase" />
-  <img src="https://img.shields.io/badge/AI-Google%20Gemini-4285F4?logo=google&logoColor=white" alt="Gemini" />
-  <img src="https://img.shields.io/badge/Zero--Knowledge-Client--Side%20Vault-FF6F00?logo=security&logoColor=white" alt="Security" />
+  <img src="https://img.shields.io/badge/Supabase-pgvector%20HNSW-3ECF8E?logo=supabase&logoColor=white" alt="Supabase" />
+  <img src="https://img.shields.io/badge/AI-Google%20Gemini%20%26%20Groq-4285F4?logo=google&logoColor=white" alt="Gemini & Groq" />
+  <img src="https://img.shields.io/badge/Embeddings-768--dim%20FastEmbed-FF6F00?logo=huggingface&logoColor=white" alt="FastEmbed" />
+  <img src="https://img.shields.io/badge/Security-Zero--Knowledge%20RAM%20Vault-E0234E?logo=shield&logoColor=white" alt="Zero-Knowledge" />
+  <img src="https://img.shields.io/badge/Tests-15%2F15%20Passing-brightgreen?logo=checkmarx&logoColor=white" alt="Tests Passing" />
   <img src="https://img.shields.io/badge/License-MIT-green" alt="MIT License" />
+</p>
+
+<p align="center">
+  <a href="https://joelaah.github.io/job-searcher/"><strong>🌐 Launch Live Web Application</strong></a> •
+  <a href="docs/DEMO_WALKTHROUGH.md"><strong>🎬 Demo Reel & Walkthrough</strong></a> •
+  <a href="docs/ARCHITECTURE.md"><strong>🏛️ Architecture Spec</strong></a> •
+  <a href="docs/API_REFERENCE.md"><strong>🔌 API Reference</strong></a> •
+  <a href="docs/SECURITY.md"><strong>🛡️ Security Model</strong></a>
 </p>
 
 ---
 
-## 🌟 Executive Overview
+## 🌟 Visual Showcase & Demonstrable Reel
+
+<p align="center">
+  <a href="docs/assets/demo_reel.mp4"><strong>🎬 Watch Full Demo Reel Video (MP4)</strong></a> •
+  <a href="docs/assets/voiceover_demo.mp3"><strong>🎙️ Listen to AI Voiceover Track (MP3)</strong></a> •
+  <a href="docs/DEMO_WALKTHROUGH.md"><strong>📜 Read Walkthrough Script</strong></a>
+</p>
+
+<p align="center">
+  <a href="docs/assets/demo_reel.mp4">
+    <img src="docs/assets/hero_dashboard.jpg" alt="JOB SeArCh Desktop Dashboard - Click to Watch Reel" width="100%" />
+  </a>
+</p>
+<p align="center"><em>Real-time desktop dashboard featuring the Marine Glassmorphism Bento Grid, 98% AI Match indicators, 2D Latent Space Constellation, and Market Salary Telemetry. (Click preview above or <a href="docs/assets/demo_reel.mp4">click here to watch the full 90-second Demo Reel</a>).</em></p>
+
+<p align="center">
+  <img src="docs/assets/vault_scraper.jpg" alt="Zero-Knowledge Vault & Live ATS Scraper" width="100%" />
+</p>
+<p align="center"><em>RAM-only isolated credential assistant modal with 1-click auto-fill alongside real-time live ATS crawling streams.</em></p>
+
+---
+
+## 🧭 Executive Overview
 **JOB SeArCh** is an intelligent, privacy-first career discovery and automated application system. Built for modern engineers, it eliminates generic job board spam by combining **deep semantic vector search**, an **adaptive reinforcement learning loop**, and a **Zero-Knowledge local credential vault** for rapid, private job applications.
 
 Rather than relying on basic keyword matching, the engine projects candidate resumes and real-time scraped job postings into a shared **768-dimensional latent space**, calculating genuine contextual fit, identifying skill gaps, and generating personalized recruiter pitches.
 
 ---
 
-## 📸 Key Features & Architecture
+## 🏛️ System Architecture
 
+```mermaid
+flowchart TB
+    subgraph Client["Flutter Web Frontend (Client-Side)"]
+        UI["Marine Glassmorphism Bento Grid\n(Dashboard, Telemetry, Radar)"]
+        BLOC["JobBloc State Machine\n(Stream-based Reactive Engine)"]
+        VAULT["Zero-Knowledge Credential Vault\n(RAM-Isolated Password Manager)"]
+        CANVAS["Latent Space Constellation\n(Interactive 2D Cosine Projection)"]
+        
+        UI <--> BLOC
+        BLOC <--> CANVAS
+        UI -.-> VAULT
+    end
+
+    subgraph Backend["FastAPI Microservice (Python 3.12)"]
+        GATEWAY["API Gateway + SlowAPI Rate Limiter\n(CORS, Throttling, Request Guard)"]
+        SCRAPERS["Multi-Source ATS Scraper Fleet\n(Ashby, Greenhouse, Lever, Custom URL)"]
+        EMBED["FastEmbed Pipeline\n(768-dim BAAI/bge-base-en-v1.5)"]
+        REASONER["LLM Reranker & Pitch Synthesizer\n(Gemini 2.0 Flash / Groq Qwen)"]
+        
+        GATEWAY --> SCRAPERS
+        SCRAPERS --> EMBED
+        EMBED --> REASONER
+    end
+
+    subgraph Database["Supabase Cloud Infrastructure"]
+        PG["PostgreSQL 15 Database"]
+        PGVEC["pgvector Extension\n(HNSW Cosine Similarity Index)"]
+        RPC["match_jobs() Vector RPC Function"]
+        TELEMETRY["Market Telemetry & Feedback Logs"]
+        
+        PG --- PGVEC
+        PGVEC --- RPC
+        PG --- TELEMETRY
+    end
+
+    BLOC <-->|REST API / Scrape Requests| GATEWAY
+    BLOC <-->|Vector RPC / Real-time Queries| RPC
+    EMBED -->|Upsert Dense Vectors| PGVEC
+    REASONER -->|Persist Rationale & Fit Analysis| PG
 ```
-                          ┌─────────────────────────────────────┐
-                          │   Flutter Web Reactive Bento Grid   │
-                          │   (BLoC State Machine + Marine UI)  │
-                          └──────────────────┬──────────────────┘
-                                             │
-               ┌─────────────────────────────┼─────────────────────────────┐
-               ▼                             ▼                             ▼
-┌─────────────────────────────┐┌───────────────────────────┐┌─────────────────────────────┐
-│ Zero-Knowledge Local Vault  ││ ATS Real-Time Web Scraper ││   2D Latent Constellation   │
-│ Client-side RAM-only CSV    ││ Ashby, Greenhouse, Lever  ││ Dynamic Semantic Distance   │
-│ autofill & auto-clipboard   ││ + Live URL Parser (Python)││ Real-time Bias Projection   │
-└─────────────────────────────┘└─────────────┬─────────────┘└─────────────────────────────┘
-                                             │
-                                             ▼
-                              ┌─────────────────────────────┐
-                              │  Supabase + pgvector Cloud  │
-                              │  768-dim HNSW Cosine Index  │
-                              │  Gemini Flash Reranking     │
-                              └─────────────────────────────┘
-```
 
-### 1. 🎨 Marine Glassmorphism Bento Grid
-- **Modern Design System**: Tailored dark-mode glassmorphism (`#0A192F` navy base with `#00E5FF` electric cyan and `#26A69A` seafoam green accents).
-- **Telemetry & Market Intelligence**: Real-time salary distributions, candidate percentile rankings, and competitive remote liquidity metrics.
-- **2D Latent Space Visualizer**: Interactive canvas showing cosine proximity between the candidate vector and live job clusters.
-
-### 2. 🛡️ Zero-Knowledge Local Credential Vault
-- **Client-Side Privacy**: Candidates can import their job application credentials (usernames, passwords, platform URLs, notes) via CSV.
-- **RAM-Only Isolation**: Credentials exist strictly within the browser memory and are **never transmitted** to the backend, database, or third parties.
-- **1-Click Auto-Fill Assistant**: Clicking "Apply" automatically detects the target platform, matches domain credentials, copies sensitive fields to the clipboard, and opens the direct application portal.
-
-### 3. 🕷️ Multi-Source Live ATS Scraper Engine
-- **Direct ATS Integration**: Fast headless extraction for **Ashby**, **Greenhouse**, and **Lever** public APIs.
-- **Custom Career Page Scraper**: Users can paste any company careers URL (e.g. `https://linear.app/careers`) to scrape, parse salary bands, and score fit in real-time.
-- **Smart Keyword & Location Filtering**: Automatically filters out stale postings and normalizes currency ranges.
-
-### 4. 🧠 AI Semantic Matching & Adaptive Steering
-- **Dual-Stage Matching**:
-  - *Stage 1*: Fast vector search via `pgvector` HNSW cosine similarity.
-  - *Stage 2*: Re-ranking and rationale generation via **Google Gemini Flash**.
-- **Continuous Learning Loop**: Every candidate interaction (*Saved*, *Applied*, *Dismissed*) dynamically recalculates domain biases, tech-stack affinities, and seniority steering vectors in real time.
-- **1-Click Tailored Outreach**: Instantly generates customized cover letters and LinkedIn recruiter cold messages based on mutual skill intersections.
+### Core Innovations
+1. **Marine Glassmorphism Bento Grid**: Bespoke dark-mode UI (`#0A192F` navy with `#00E5FF` electric cyan and `#26A69A` seafoam accents) featuring real-time market salary telemetry, candidate percentile radar, and interactive filter strips.
+2. **2D Latent Space Constellation Visualizer**: Canvas rendering cosine proximity between the candidate vector and live job clusters in dynamic orbit.
+3. **Zero-Knowledge Local Credential Vault**: Candidate application logins exist solely within browser RAM. Passwords are never sent to the backend, database, or third parties. Includes 1-click clipboard auto-fill.
+4. **Multi-Source Live ATS Scraper**: Headless extraction for **Ashby**, **Greenhouse**, and **Lever**, plus an arbitrary URL crawler with anti-bot fallback (`scrapling`).
+5. **Adaptive Reinforcement Feedback**: Every candidate action (*Saved*, *Applied*, *Dismissed*) dynamically recalculates domain biases, tech-stack affinities, and seniority steering vectors in real time.
 
 ---
 
-## 🛠️ Technology Stack
+## ⚡ API & Backend Reference
 
-| Layer | Technologies |
-| :--- | :--- |
-| **Frontend Web** | Flutter Web, Dart, `flutter_bloc`, `google_fonts`, Glassmorphism CSS |
-| **Backend API** | Python 3.12, FastAPI, Uvicorn, Pydantic, Requests |
-| **Database & Vector Tier** | Supabase, PostgreSQL 15, `pgvector`, HNSW Indexing |
-| **AI & Embeddings** | Google Gemini (`text-embedding-004`, Gemini 1.5 Flash) |
-| **Scraping Engine** | BeautifulSoup4, lxml, Async HTTP |
-| **DevOps & CI/CD** | GitHub Actions, GitHub Pages Web Pipeline |
+The Python FastAPI backend exposes high-performance REST endpoints protected by IP rate limiting:
+
+| Method | Endpoint | Rate Limit | Purpose |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/health` | 60/min | System and scraper health telemetry |
+| `POST` | `/api/scrape-url` | 10/min | Live headless extraction from an arbitrary careers URL |
+| `POST` | `/api/scrape-all` | 2/hour | Batch synchronization across Greenhouse, Lever, and Ashby boards |
+
+### Live URL Scraper Payload (`POST /api/scrape-url`)
+```bash
+curl -X POST "http://localhost:8000/api/scrape-url" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://boards.greenhouse.io/figma", "max_jobs": 15}'
+```
+**Response (`200 OK`)**:
+```json
+{
+  "status": "success",
+  "url": "https://boards.greenhouse.io/figma",
+  "count": 1,
+  "jobs": [
+    {
+      "title": "Senior Systems Engineer",
+      "company": "Figma",
+      "location": "San Francisco, CA / Remote",
+      "is_remote": true,
+      "salary_min": 180000,
+      "salary_max": 220000,
+      "job_url": "https://boards.greenhouse.io/figma/jobs/...",
+      "description": "Building high-performance collaborative graphics engines...",
+      "tags": ["C++", "Rust", "WebAssembly", "Live Scraped"],
+      "source": "greenhouse",
+      "posted_at": "2026-03-30"
+    }
+  ]
+}
+```
+*For complete endpoint schemas and cURL examples, see [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md).*
 
 ---
 
-## 📂 Project Structure
+## 🛡️ Security & Privacy Considerations
 
+- **Zero-Knowledge RAM-Only Isolation**: Passwords and application credentials loaded via CSV exist **only within Dart runtime heap memory**. No cookies, `localStorage`, `sessionStorage`, or backend databases store sensitive credentials. Refreshing the browser tab purges the heap immediately.
+- **Anti-SSRF Protections**: Scraper endpoints reject loopback and private IP blocks (`127.0.0.1`, `10.0.0.0/8`, `192.168.0.0/16`, `169.254.169.254`), permitting only valid public `http://` and `https://` schemas.
+- **Rate-Limiting Defense**: Outbound scraping and inbound queries are guarded by `slowapi` to prevent abuse.
+- **Supabase RLS & Key Separation**: Anonymous client tokens are restricted by Row Level Security; service-role privileges reside strictly on the private server.
+- *Detailed security disclosures available in [`docs/SECURITY.md`](docs/SECURITY.md).*
+
+---
+
+## 🧪 Automated Testing & Verification
+
+Both the frontend client and the Python backend feature automated test suites verifying data models, state transitions, parsing logic, and API endpoints.
+
+### Run Flutter Test Suite (10/10 Passing)
+```bash
+# Runs JobModel, LocalCredential, and Desktop smoke tests
+flutter test
 ```
-job-searcher/
-├── .github/workflows/          # GitHub Actions CI/CD (Pages deployment)
-├── backend/
-│   ├── scraper.py              # Ashby, Greenhouse, Lever & Generic Scrapers
-│   ├── database.py             # Supabase pgvector client & telemetry logging
-│   ├── db_schema.sql           # PostgreSQL DDL, HNSW index & similarity RPC
-│   ├── embeddings.py           # Gemini 768-dim embedding generator
-│   ├── scorer.py               # Gemini LLM match rationale & pitch generator
-│   ├── local_auto_apply.py     # Local zero-knowledge credential assistant
-│   └── main.py                 # FastAPI REST API endpoints
-├── lib/
-│   ├── bloc/                   # BLoC state machine (JobBloc, JobEvent, JobState)
-│   ├── models/                 # JobModel, UserProfile, LocalCredential
-│   ├── theme/                  # Marine green-blue color tokens & typography
-│   ├── widgets/                # Bento grid cards, Latent Space visualizer, Vault
-│   └── main.dart               # Flutter application entrypoint
-├── web/                        # Web manifest, index.html, and canvas renderer
-└── pubspec.yaml                # Flutter project dependencies
+```
+00:00 +0: loading D:/job searcher/test/job_model_test.dart
+00:00 +1: JobModel Unit Tests JobModel.formattedSalary formats ranges correctly
+00:00 +2: JobModel Unit Tests JobModel.formattedSalary returns "Competitive" when salaries are zero
+00:00 +3: JobModel Unit Tests JobModel.copyWith correctly updates interaction flags
+00:00 +4: JobModel Unit Tests JobModel.fromScrapedJson parses live scraper payload accurately
+00:00 +5: JobModel Unit Tests JobModel.fromScrapedJson provides graceful defaults for empty payload
+00:05 +6: LocalCredential Unit Tests LocalCredential initializes correctly with provided values
+00:05 +7: LocalCredential Unit Tests LocalCredential.fromMap handles standard CSV headers
+00:05 +8: LocalCredential Unit Tests LocalCredential.fromMap handles alias column keys gracefully
+00:05 +9: LocalCredential Unit Tests LocalCredential.copyWith updates specific properties without mutation
+00:09 +10: JOB SeArCh desktop smoke test
+00:13 +10: All tests passed!
+```
+
+### Run Python Backend Test Suite (5/5 Passing)
+```bash
+cd backend
+python -m unittest test_server.py
+```
+```
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 0.139s
+
+OK
 ```
 
 ---
@@ -127,41 +217,48 @@ Fill in your credentials:
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_KEY=your-supabase-anon-or-secret-key
 GEMINI_API_KEY=your-gemini-api-key
+GROQ_API_KEY=your-groq-api-key
 ```
 
 ### 3. Initialize the Database
 Open your Supabase **SQL Editor**, paste the contents of [`backend/db_schema.sql`](backend/db_schema.sql), and click **Run**.
 
-### 4. Start the Python Scraper Backend
+### 4. Start the Python Backend Service
 ```bash
 cd backend
 pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
+uvicorn server:app --reload --port 8000
 ```
 
 ### 5. Launch the Flutter Web Frontend
 ```bash
-# In the root directory
+# In the project root directory
 flutter pub get
-flutter run -d web-server --web-port=5000
+flutter run -d chrome --web-port=5000
 ```
 Open **`http://localhost:5000/`** in your browser.
 
 ---
 
-## 🌐 Deploy to GitHub Pages
+## 🌐 Deployment to GitHub Pages
 
-This repository is pre-configured with a **GitHub Actions workflow** (`.github/workflows/deploy.yml`). 
-Whenever you push to the `main` or `master` branch:
-1. Flutter compiles the web bundle in release mode with HTML renderer optimization.
-2. The compiled assets are automatically published to **GitHub Pages**.
-3. Live URL: `https://joelaah.github.io/job-searcher/`
+The repository includes a GitHub Actions workflow (`.github/workflows/deploy.yml`):
+- Pushing to `main` builds the Flutter Web application in release mode.
+- Deployed live at: **[`https://joelaah.github.io/job-searcher/`](https://joelaah.github.io/job-searcher/)**
 
 ---
 
-## 🔒 Security & Privacy Notice
-- No candidate passwords or credentials uploaded through the **Zero-Knowledge Vault** are ever saved to disk or sent to any server. All credentials exist only in browser memory and are cleared when the tab is closed.
-- The `.gitignore` file strictly prohibits committing `.env` files or sensitive API keys.
+## 🛠️ Technology Stack
+
+| Layer | Technologies |
+| :--- | :--- |
+| **Frontend Web** | Flutter Web 3.x, Dart 3, `flutter_bloc`, `google_fonts`, Glassmorphism CSS |
+| **Backend API** | Python 3.12, FastAPI, Uvicorn, SlowAPI, Pydantic |
+| **Database & Vector Tier** | Supabase, PostgreSQL 15, `pgvector`, HNSW Cosine Index |
+| **AI & Embeddings** | FastEmbed (`BAAI/bge-base-en-v1.5`), Google Gemini 2.0 Flash, Groq (`qwen/qwen3.8-27b`) |
+| **Scraping Engine** | BeautifulSoup4, lxml, Requests, Scrapling stealth fetchers |
+| **Testing** | Flutter Test framework, Python `unittest`, FastAPI `TestClient` |
+| **CI/CD** | GitHub Actions, GitHub Pages |
 
 ---
 
