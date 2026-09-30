@@ -87,4 +87,10 @@ joel_*.json
 graphify-out/
 .graphify*
 
+# Temporary recording automation & screen captures
+record_*.py
+produce_*.py
+temp_recording/
+live_*.png
+
 

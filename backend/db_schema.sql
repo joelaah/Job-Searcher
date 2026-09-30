@@ -135,5 +135,44 @@ CREATE OR REPLACE TRIGGER profiles_updated_at
     FOR EACH ROW EXECUTE FUNCTION update_modified_column();
 
 -- ══════════════════════════════════════════════════════════════
--- Done! Your database is ready for JOB SeArCh.
+-- 9. Row-Level Security (RLS) & Access Control
+-- ══════════════════════════════════════════════════════════════
+-- Enable RLS across all tables to prevent unauthorized PostgREST API access
+
+ALTER TABLE jobs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_job_interactions ENABLE ROW LEVEL SECURITY;
+
+-- JOBS TABLE POLICIES:
+-- Anyone (anon + authenticated) can view scraped public jobs
+DROP POLICY IF EXISTS "Public jobs are viewable by everyone" ON jobs;
+CREATE POLICY "Public jobs are viewable by everyone"
+    ON jobs FOR SELECT
+    USING (true);
+
+-- Only backend service_role can insert, update, or delete jobs
+DROP POLICY IF EXISTS "Service role manages jobs" ON jobs;
+CREATE POLICY "Service role manages jobs"
+    ON jobs FOR ALL
+    USING (auth.role() = 'service_role')
+    WITH CHECK (auth.role() = 'service_role');
+
+-- USER PROFILES TABLE POLICIES:
+-- Users can view and manage their own profile; service role has full access
+DROP POLICY IF EXISTS "Users manage own profiles" ON user_profiles;
+CREATE POLICY "Users manage own profiles"
+    ON user_profiles FOR ALL
+    USING (auth.uid() = id OR auth.role() = 'service_role')
+    WITH CHECK (auth.uid() = id OR auth.role() = 'service_role');
+
+-- USER INTERACTIONS TABLE POLICIES:
+-- Users can log and view their own telemetry; service role has full access
+DROP POLICY IF EXISTS "Users manage own interactions" ON user_job_interactions;
+CREATE POLICY "Users manage own interactions"
+    ON user_job_interactions FOR ALL
+    USING (auth.uid() = user_id OR auth.role() = 'service_role')
+    WITH CHECK (auth.uid() = user_id OR auth.role() = 'service_role');
+
+-- ══════════════════════════════════════════════════════════════
+-- Done! Your database is hardened and ready for JOB SeArCh.
 -- ══════════════════════════════════════════════════════════════

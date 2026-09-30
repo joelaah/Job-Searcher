@@ -94,6 +94,47 @@ class TestJobSearchAPI(unittest.TestCase):
         self.assertEqual(d["job_url"], "https://example.com/apply/42")
         self.assertFalse(d["is_remote"])
 
+    def test_ssrf_blocking_loopback(self):
+        """Verify endpoint rejects loopback IP addresses (SSRF prevention)."""
+        response = self.client.post(
+            "/api/scrape-url",
+            json={"url": "http://127.0.0.1:8000/internal", "max_jobs": 10},
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Restricted or invalid target URL", response.json()["detail"])
+
+    def test_ssrf_blocking_metadata(self):
+        """Verify endpoint rejects cloud metadata IP addresses."""
+        response = self.client.post(
+            "/api/scrape-url",
+            json={"url": "http://169.254.169.254/latest/meta-data/", "max_jobs": 10},
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Restricted or invalid target URL", response.json()["detail"])
+
+    def test_ssrf_blocking_private_subnet(self):
+        """Verify endpoint rejects private RFC 1918 subnets."""
+        response = self.client.post(
+            "/api/scrape-url",
+            json={"url": "http://192.168.1.1/admin", "max_jobs": 10},
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Restricted or invalid target URL", response.json()["detail"])
+
+    def test_cors_trusted_origin(self):
+        """Verify CORS allows trusted GitHub Pages origin."""
+        response = self.client.options(
+            "/api/scrape-url",
+            headers={
+                "Origin": "https://joelaah.github.io",
+                "Access-Control-Request-Method": "POST",
+            },
+        )
+        self.assertEqual(
+            response.headers.get("access-control-allow-origin"),
+            "https://joelaah.github.io",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

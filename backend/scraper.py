@@ -6,6 +6,8 @@ No credentials needed — these are all publicly accessible JSON endpoints.
 
 import html as html_module
 import re
+import socket
+import ipaddress
 import time
 from urllib.parse import urlparse, urljoin, parse_qs
 import requests
@@ -32,6 +34,56 @@ class ScrapedJob:
 
     def to_dict(self) -> dict:
         return asdict(self)
+
+
+# ──────────────────────────────────────────
+# Security & URL Validation (SSRF Prevention)
+# ──────────────────────────────────────────
+
+def is_safe_url(target_url: str) -> bool:
+    """
+    Validate that target_url uses http/https and does not resolve
+    to loopback, private RFC-1918, link-local, or cloud metadata addresses.
+    """
+    if not target_url or not isinstance(target_url, str):
+        return False
+    target_url = target_url.strip()
+    if not (target_url.startswith("http://") or target_url.startswith("https://")):
+        target_url = "https://" + target_url
+
+    try:
+        parsed = urlparse(target_url)
+    except Exception:
+        return False
+
+    if parsed.scheme not in ("http", "https"):
+        return False
+
+    hostname = parsed.hostname
+    if not hostname:
+        return False
+
+    # Block common literal localhost/loopback names
+    if hostname.lower() in ("localhost", "127.0.0.1", "0.0.0.0", "::1"):
+        return False
+
+    try:
+        addr_info = socket.getaddrinfo(hostname, None)
+        for entry in addr_info:
+            ip_str = entry[4][0]
+            ip_obj = ipaddress.ip_address(ip_str)
+            if (
+                ip_obj.is_private
+                or ip_obj.is_loopback
+                or ip_obj.is_link_local
+                or ip_obj.is_reserved
+                or ip_obj.is_multicast
+            ):
+                return False
+        return True
+    except Exception:
+        # If hostname cannot be resolved, reject
+        return False
 
 
 # ──────────────────────────────────────────
@@ -394,6 +446,9 @@ class GenericWebScraper:
             return ""
 
     def scrape(self, url: str, max_jobs: int = 40) -> list[ScrapedJob]:
+        if not is_safe_url(url):
+            raise ValueError(f"Restricted or invalid target URL: '{url}'. Only public HTTP/HTTPS URLs are allowed.")
+
         jobs = []
         headers = {
             "User-Agent": (
@@ -503,6 +558,9 @@ def scrape_custom_url(url: str, max_jobs: int = 50) -> list[ScrapedJob]:
     url = url.strip()
     if not url.startswith("http://") and not url.startswith("https://"):
         url = "https://" + url
+
+    if not is_safe_url(url):
+        raise ValueError(f"Restricted or invalid target URL: '{url}'. Only public HTTP/HTTPS URLs are allowed.")
 
     parsed = urlparse(url)
     netloc = parsed.netloc.lower()

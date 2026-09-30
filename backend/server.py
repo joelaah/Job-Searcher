@@ -15,7 +15,7 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
-from scraper import scrape_custom_url, scrape_all_sources, ScrapedJob
+from scraper import scrape_custom_url, scrape_all_sources, ScrapedJob, is_safe_url
 
 # Initialize Limiter keyed by client IP address
 limiter = Limiter(key_func=get_remote_address, default_limits=["120/minute"])
@@ -31,12 +31,20 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
 
-# Enable CORS for Flutter Web (localhost:5000 and all local origins)
+# Explicit trusted origins for Flutter Web & local clients (prevents cross-origin attacks)
+ALLOWED_ORIGINS = [
+    "https://joelaah.github.io",
+    "http://localhost:5000",
+    "http://127.0.0.1:5000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -72,19 +80,28 @@ def health_check(request: Request):
 @app.post("/api/scrape-url")
 @limiter.limit("10/minute")
 def api_scrape_url(request: Request, payload: ScrapeUrlRequest):
-    if not payload.url or len(payload.url.strip()) < 4:
+    clean_url = payload.url.strip() if payload.url else ""
+    if not clean_url or len(clean_url) < 4:
         raise HTTPException(status_code=400, detail="A valid URL is required.")
+
+    if not is_safe_url(clean_url):
+        raise HTTPException(
+            status_code=400,
+            detail="Restricted or invalid target URL. Only public HTTP/HTTPS URLs are allowed (SSRF protection).",
+        )
 
     try:
         jobs: List[ScrapedJob] = scrape_custom_url(
-            url=payload.url.strip(), max_jobs=payload.max_jobs or 50
+            url=clean_url, max_jobs=payload.max_jobs or 50
         )
         return {
             "status": "success",
-            "url": payload.url.strip(),
+            "url": clean_url,
             "count": len(jobs),
             "jobs": [j.to_dict() for j in jobs],
         }
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Failed to scrape URL: {str(e)}"
