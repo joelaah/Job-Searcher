@@ -143,35 +143,70 @@ ALTER TABLE jobs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_job_interactions ENABLE ROW LEVEL SECURITY;
 
--- JOBS TABLE POLICIES:
--- Anyone (anon + authenticated) can view scraped public jobs
+-- ─── 9.1 JOBS TABLE POLICIES ───
+-- Anyone (public anon + authenticated) can view scraped public jobs
 DROP POLICY IF EXISTS "Public jobs are viewable by everyone" ON jobs;
 CREATE POLICY "Public jobs are viewable by everyone"
     ON jobs FOR SELECT
+    TO anon, authenticated
     USING (true);
 
--- Only backend service_role can insert, update, or delete jobs
+-- Backend service role has complete read/write access for scraping & indexing
 DROP POLICY IF EXISTS "Service role manages jobs" ON jobs;
 CREATE POLICY "Service role manages jobs"
     ON jobs FOR ALL
-    USING (auth.role() = 'service_role')
-    WITH CHECK (auth.role() = 'service_role');
+    TO service_role
+    USING (true)
+    WITH CHECK (true);
 
--- USER PROFILES TABLE POLICIES:
--- Users can view and manage their own profile; service role has full access
-DROP POLICY IF EXISTS "Users manage own profiles" ON user_profiles;
-CREATE POLICY "Users manage own profiles"
+-- ─── 9.2 USER PROFILES TABLE POLICIES ───
+-- Authenticated users can view and manage only their own profile
+DROP POLICY IF EXISTS "Users can view own profile" ON user_profiles;
+CREATE POLICY "Users can view own profile"
+    ON user_profiles FOR SELECT
+    TO authenticated
+    USING ((select auth.uid()) = id);
+
+DROP POLICY IF EXISTS "Users can insert own profile" ON user_profiles;
+CREATE POLICY "Users can insert own profile"
+    ON user_profiles FOR INSERT
+    TO authenticated
+    WITH CHECK ((select auth.uid()) = id);
+
+DROP POLICY IF EXISTS "Users can update own profile" ON user_profiles;
+CREATE POLICY "Users can update own profile"
+    ON user_profiles FOR UPDATE
+    TO authenticated
+    USING ((select auth.uid()) = id)
+    WITH CHECK ((select auth.uid()) = id);
+
+DROP POLICY IF EXISTS "Service role manages user profiles" ON user_profiles;
+CREATE POLICY "Service role manages user profiles"
     ON user_profiles FOR ALL
-    USING (auth.uid() = id OR auth.role() = 'service_role')
-    WITH CHECK (auth.uid() = id OR auth.role() = 'service_role');
+    TO service_role
+    USING (true)
+    WITH CHECK (true);
 
--- USER INTERACTIONS TABLE POLICIES:
--- Users can log and view their own telemetry; service role has full access
-DROP POLICY IF EXISTS "Users manage own interactions" ON user_job_interactions;
-CREATE POLICY "Users manage own interactions"
+-- ─── 9.3 USER INTERACTIONS TABLE POLICIES ───
+-- Authenticated users can view and log their own telemetry
+DROP POLICY IF EXISTS "Users can view own interactions" ON user_job_interactions;
+CREATE POLICY "Users can view own interactions"
+    ON user_job_interactions FOR SELECT
+    TO authenticated
+    USING ((select auth.uid()) = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own interactions" ON user_job_interactions;
+CREATE POLICY "Users can insert own interactions"
+    ON user_job_interactions FOR INSERT
+    TO authenticated
+    WITH CHECK ((select auth.uid()) = user_id);
+
+DROP POLICY IF EXISTS "Service role manages interactions" ON user_job_interactions;
+CREATE POLICY "Service role manages interactions"
     ON user_job_interactions FOR ALL
-    USING (auth.uid() = user_id OR auth.role() = 'service_role')
-    WITH CHECK (auth.uid() = user_id OR auth.role() = 'service_role');
+    TO service_role
+    USING (true)
+    WITH CHECK (true);
 
 -- ══════════════════════════════════════════════════════════════
 -- Done! Your database is hardened and ready for JOB SeArCh.
