@@ -20,12 +20,13 @@ class TestJobSearchAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data["status"], "healthy")
-        self.assertEqual(data["version"], "1.0.0")
+        self.assertEqual(data["version"], "2.0.0")
         self.assertIn("services", data)
         self.assertEqual(data["services"]["scraper"], "online")
         self.assertEqual(data["services"]["greenhouse"], "ready")
         self.assertEqual(data["services"]["lever"], "ready")
         self.assertEqual(data["services"]["ashby"], "ready")
+        self.assertEqual(data["services"]["auto_apply"], "ready")
 
     def test_scrape_url_empty_validation(self):
         """Verify endpoint rejects empty or whitespace-only URLs with 400."""

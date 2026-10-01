@@ -26,3 +26,7 @@ slowapi>=0.1.10
 # Anti-Bot & Stealth Web Scraping Fallback
 scrapling[fetchers]>=0.4.15
 
+# Auto-Apply Engine (Playwright Browser Automation)
+playwright>=1.44.0
+pyyaml>=6.0
+

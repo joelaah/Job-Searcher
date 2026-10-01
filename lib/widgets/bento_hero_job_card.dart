@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
 import '../bloc/job_bloc.dart';
 import '../bloc/job_event.dart';
+import '../bloc/job_state.dart';
 import '../models/job_model.dart';
 import '../models/local_credential.dart';
 import '../theme/app_colors.dart';
@@ -67,6 +68,25 @@ class _BentoHeroJobCardState extends State<BentoHeroJobCard> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication, webOnlyWindowName: '_blank');
     }
+  }
+
+  void _autoApplyJob(JobModel job) {
+    final bloc = context.read<JobBloc>();
+    bloc.add(AutoApplyJob(
+      jobId: job.id,
+      jobUrl: job.applicationUrl,
+      jobTitle: job.title,
+      jobCompany: job.company,
+      jobDescription: job.fullDescription,
+    ));
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('🚀 Auto-Apply engine launched! Filling application form...'),
+        backgroundColor: AppColors.cyanAccent,
+        duration: Duration(seconds: 3),
+      ),
+    );
   }
 
   @override
@@ -387,6 +407,61 @@ class _BentoHeroJobCardState extends State<BentoHeroJobCard> {
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   ),
                   onPressed: () => _applyJob(job),
+                ),
+
+                const SizedBox(width: 8),
+
+                // 🚀 Auto Apply Button
+                BlocBuilder<JobBloc, JobState>(
+                  buildWhen: (prev, curr) =>
+                      prev.autoApplyStatuses[job.id]?.status !=
+                      curr.autoApplyStatuses[job.id]?.status,
+                  builder: (context, state) {
+                    final applyStatus = state.autoApplyStatuses[job.id];
+                    final isRunning = applyStatus?.isRunning ?? false;
+                    final isSuccess = applyStatus?.isSuccess ?? false;
+
+                    return ElevatedButton.icon(
+                      onPressed: isRunning || isSuccess || job.isApplied
+                          ? null
+                          : () => _autoApplyJob(job),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isSuccess
+                            ? AppColors.matchHigh
+                            : isRunning
+                                ? AppColors.surfaceElevated
+                                : AppColors.cyanAccent,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        disabledBackgroundColor: isSuccess
+                            ? AppColors.matchHigh.withAlpha(180)
+                            : AppColors.surfaceElevated,
+                      ),
+                      icon: isRunning
+                          ? const SizedBox(
+                              width: 14, height: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.cyanAccent,
+                              ),
+                            )
+                          : Icon(
+                              isSuccess ? Icons.check_circle : Icons.rocket_launch,
+                              size: 16,
+                              color: isSuccess ? Colors.black : Colors.black87,
+                            ),
+                      label: Text(
+                        isRunning
+                            ? 'Filling...'
+                            : isSuccess
+                                ? 'Filled ✓'
+                                : 'Auto Apply',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          color: isSuccess ? Colors.black : Colors.black87,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),

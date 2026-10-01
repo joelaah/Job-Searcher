@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:http/http.dart' as http;
 import '../models/job_model.dart';
 import '../models/user_profile.dart';
 import '../models/local_credential.dart';
@@ -34,6 +36,8 @@ class JobBloc extends Bloc<JobEvent, JobState> {
     on<ImportLocalCredentials>(_onImportLocalCredentials);
     on<DeleteLocalCredential>(_onDeleteLocalCredential);
     on<ClearLocalCredentials>(_onClearLocalCredentials);
+    on<AutoApplyJob>(_onAutoApplyJob);
+    on<AutoApplyStatusUpdate>(_onAutoApplyStatusUpdate);
   }
 
   void _onAddTargetRole(AddTargetRole event, Emitter<JobState> emit) {
@@ -721,5 +725,88 @@ class JobBloc extends Bloc<JobEvent, JobState> {
       supabaseAnonKey: 'sb_publishable_Ij8knuo7DgZPtfw9Zv0F3A_BSUOYJZY',
       isSupabaseConnected: true,
     );
+  }
+
+  // ══════════════════════════════════════════════════
+  // Auto-Apply Engine Handlers
+  // ══════════════════════════════════════════════════
+
+  static const String _backendUrl = 'http://localhost:8000';
+
+  void _onAutoApplyJob(AutoApplyJob event, Emitter<JobState> emit) async {
+    // Set initial pending status
+    final statuses = Map<String, AutoApplyStatus>.from(state.autoApplyStatuses);
+    statuses[event.jobId] = AutoApplyStatus(
+      jobId: event.jobId,
+      status: 'running',
+      message: 'Launching auto-apply engine...',
+    );
+    emit(state.copyWith(autoApplyStatuses: statuses));
+
+    try {
+      final response = await http.post(
+        Uri.parse('$_backendUrl/api/auto-apply'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'job_url': event.jobUrl,
+          'job_title': event.jobTitle,
+          'job_company': event.jobCompany,
+          'job_description': event.jobDescription,
+          'headless': true,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+      final updatedStatuses = Map<String, AutoApplyStatus>.from(state.autoApplyStatuses);
+
+      if (response.statusCode == 200 && data['status'] == 'success') {
+        updatedStatuses[event.jobId] = AutoApplyStatus(
+          jobId: event.jobId,
+          status: 'success',
+          message: 'Application filled! ${data['fields_filled']} fields completed in ${data['duration_seconds']}s',
+          fieldsFilled: data['fields_filled'] ?? 0,
+          log: List<String>.from(data['log'] ?? []),
+        );
+
+        // Also mark the job as applied
+        final updatedJobs = state.allJobs.map((j) {
+          if (j.id == event.jobId) return j.copyWith(isApplied: true);
+          return j;
+        }).toList();
+
+        emit(state.copyWith(
+          autoApplyStatuses: updatedStatuses,
+          allJobs: updatedJobs,
+        ));
+      } else {
+        updatedStatuses[event.jobId] = AutoApplyStatus(
+          jobId: event.jobId,
+          status: 'error',
+          message: data['error'] ?? data['detail'] ?? 'Unknown error',
+          log: List<String>.from(data['log'] ?? []),
+        );
+        emit(state.copyWith(autoApplyStatuses: updatedStatuses));
+      }
+    } catch (e) {
+      final updatedStatuses = Map<String, AutoApplyStatus>.from(state.autoApplyStatuses);
+      updatedStatuses[event.jobId] = AutoApplyStatus(
+        jobId: event.jobId,
+        status: 'error',
+        message: 'Connection failed: $e. Is the backend running on localhost:8000?',
+      );
+      emit(state.copyWith(autoApplyStatuses: updatedStatuses));
+    }
+  }
+
+  void _onAutoApplyStatusUpdate(AutoApplyStatusUpdate event, Emitter<JobState> emit) {
+    final statuses = Map<String, AutoApplyStatus>.from(state.autoApplyStatuses);
+    statuses[event.jobId] = AutoApplyStatus(
+      jobId: event.jobId,
+      status: event.status,
+      message: event.message,
+      fieldsFilled: event.fieldsFilled,
+      log: event.log,
+    );
+    emit(state.copyWith(autoApplyStatuses: statuses));
   }
 }

@@ -133,3 +133,33 @@ class DeleteLocalCredential extends JobEvent {
 
 class ClearLocalCredentials extends JobEvent {}
 
+class AutoApplyJob extends JobEvent {
+  final String jobId;
+  final String jobUrl;
+  final String jobTitle;
+  final String jobCompany;
+  final String jobDescription;
+  AutoApplyJob({
+    required this.jobId,
+    required this.jobUrl,
+    this.jobTitle = '',
+    this.jobCompany = '',
+    this.jobDescription = '',
+  });
+}
+
+class AutoApplyStatusUpdate extends JobEvent {
+  final String jobId;
+  final String status; // 'pending', 'running', 'success', 'error'
+  final String message;
+  final int fieldsFilled;
+  final List<String> log;
+  AutoApplyStatusUpdate({
+    required this.jobId,
+    required this.status,
+    this.message = '',
+    this.fieldsFilled = 0,
+    this.log = const [],
+  });
+}
+

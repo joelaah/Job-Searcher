@@ -83,6 +83,10 @@ backend/score_curated.py
 joel_*.json
 *.pdf
 
+# Auto-Apply Engine (personal data & local output)
+backend/candidate_profile.yaml
+backend/apply_screenshots/
+
 # Graphify knowledge graph outputs
 graphify-out/
 .graphify*

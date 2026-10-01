@@ -3,6 +3,43 @@ import '../models/job_model.dart';
 import '../models/user_profile.dart';
 import '../models/local_credential.dart';
 
+// ──────────────────── Auto-Apply Status ────────────────────
+
+class AutoApplyStatus {
+  final String jobId;
+  final String status; // 'pending', 'running', 'success', 'error'
+  final String message;
+  final int fieldsFilled;
+  final List<String> log;
+
+  const AutoApplyStatus({
+    required this.jobId,
+    this.status = 'pending',
+    this.message = '',
+    this.fieldsFilled = 0,
+    this.log = const [],
+  });
+
+  AutoApplyStatus copyWith({
+    String? status,
+    String? message,
+    int? fieldsFilled,
+    List<String>? log,
+  }) {
+    return AutoApplyStatus(
+      jobId: jobId,
+      status: status ?? this.status,
+      message: message ?? this.message,
+      fieldsFilled: fieldsFilled ?? this.fieldsFilled,
+      log: log ?? this.log,
+    );
+  }
+
+  bool get isRunning => status == 'running' || status == 'pending';
+  bool get isSuccess => status == 'success';
+  bool get isError => status == 'error';
+}
+
 // ──────────────────── State ────────────────────
 
 @immutable
@@ -26,6 +63,7 @@ class JobState {
   final Set<String> boostedSkills; // e.g. {'PostgreSQL', 'TypeScript'}
   final List<String> targetRoles; // Freeform custom roles, e.g. ['Full-Stack Developer', 'DevOps Intern']
   final List<LocalCredential> localCredentials; // Zero-knowledge client-only credentials
+  final Map<String, AutoApplyStatus> autoApplyStatuses; // Track auto-apply progress per job
 
   const JobState({
     required this.userProfile,
@@ -47,6 +85,7 @@ class JobState {
     this.boostedSkills = const {'PostgreSQL', 'Flutter'},
     this.targetRoles = const ['Full-Stack Developer', 'Mobile & Systems Engineer'],
     this.localCredentials = const [],
+    this.autoApplyStatuses = const {},
   });
 
   // ── Steered Match Calculation (Universal Roles & Experience Spectrum) ──
@@ -218,6 +257,7 @@ class JobState {
     Set<String>? boostedSkills,
     List<String>? targetRoles,
     List<LocalCredential>? localCredentials,
+    Map<String, AutoApplyStatus>? autoApplyStatuses,
   }) {
     return JobState(
       userProfile: userProfile ?? this.userProfile,
@@ -239,6 +279,7 @@ class JobState {
       boostedSkills: boostedSkills ?? this.boostedSkills,
       targetRoles: targetRoles ?? this.targetRoles,
       localCredentials: localCredentials ?? this.localCredentials,
+      autoApplyStatuses: autoApplyStatuses ?? this.autoApplyStatuses,
     );
   }
 }
