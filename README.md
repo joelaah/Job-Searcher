@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <a href="https://joelaah.github.io/job-searcher/"><strong>🌐 Launch Live Web Application</strong></a> •
+  <a href="https://joelaah.github.io/Job-Searcher/"><strong>🌐 Launch Live Web Application</strong></a> •
   <a href="docs/DEMO_WALKTHROUGH.md"><strong>🎬 Demo Reel & Walkthrough</strong></a> •
   <a href="docs/ARCHITECTURE.md"><strong>🏛️ Architecture Spec</strong></a> •
   <a href="docs/API_REFERENCE.md"><strong>🔌 API Reference</strong></a> •
@@ -244,7 +244,7 @@ Open **`http://localhost:5000/`** in your browser.
 
 The repository includes a GitHub Actions workflow (`.github/workflows/deploy.yml`):
 - Pushing to `main` builds the Flutter Web application in release mode.
-- Deployed live at: **[`https://joelaah.github.io/job-searcher/`](https://joelaah.github.io/job-searcher/)**
+- Deployed live at: **[`https://joelaah.github.io/Job-Searcher/`](https://joelaah.github.io/Job-Searcher/)**
 
 ---
 
