@@ -4,12 +4,18 @@ import 'package:http/http.dart' as http;
 import '../models/job_model.dart';
 import '../models/user_profile.dart';
 import '../models/local_credential.dart';
+import '../services/job_persistence_service.dart';
 import 'job_event.dart';
 import 'job_state.dart';
 
 
 class JobBloc extends Bloc<JobEvent, JobState> {
-  JobBloc() : super(_initialState()) {
+  final JobPersistenceService _persistence;
+
+  JobBloc({required JobPersistenceService persistence})
+      : _persistence = persistence,
+        super(_initialState()) {
+    on<LoadPersistedState>(_onLoadPersistedState);
     on<SearchQueryChanged>(_onSearchQueryChanged);
     on<FilterRemoteOnlyToggled>(_onFilterRemoteOnlyToggled);
     on<MinMatchScoreChanged>(_onMinMatchScoreChanged);
@@ -38,6 +44,30 @@ class JobBloc extends Bloc<JobEvent, JobState> {
     on<ClearLocalCredentials>(_onClearLocalCredentials);
     on<AutoApplyJob>(_onAutoApplyJob);
     on<AutoApplyStatusUpdate>(_onAutoApplyStatusUpdate);
+  }
+
+  // ──────────── Persistence Hydration ────────────
+
+  void _onLoadPersistedState(
+    LoadPersistedState event,
+    Emitter<JobState> emit,
+  ) {
+    final interactions = _persistence.loadInteractions();
+    if (interactions.isEmpty) return;
+
+    final hydrated = state.allJobs.map((job) {
+      final saved = interactions[job.id];
+      if (saved != null) {
+        return job.copyWith(
+          isSaved: saved['saved'] ?? false,
+          isApplied: saved['applied'] ?? false,
+          isDismissed: saved['dismissed'] ?? false,
+        );
+      }
+      return job;
+    }).toList();
+
+    emit(state.copyWith(allJobs: hydrated));
   }
 
   void _onAddTargetRole(AddTargetRole event, Emitter<JobState> emit) {
@@ -281,6 +311,12 @@ class JobBloc extends Bloc<JobEvent, JobState> {
         if (toggled.isSaved) {
           _learnFromPositive(toggled, 'saved', emit);
         }
+        _persistence.saveInteraction(
+          job.id,
+          isSaved: toggled.isSaved,
+          isApplied: toggled.isApplied,
+          isDismissed: toggled.isDismissed,
+        );
         return toggled;
       }
       return job;
@@ -294,6 +330,12 @@ class JobBloc extends Bloc<JobEvent, JobState> {
       if (job.id == event.jobId) {
         final applied = job.copyWith(isApplied: true);
         _learnFromPositive(applied, 'applied', emit);
+        _persistence.saveInteraction(
+          job.id,
+          isSaved: applied.isSaved,
+          isApplied: true,
+          isDismissed: applied.isDismissed,
+        );
         return applied;
       }
       return job;
@@ -307,6 +349,12 @@ class JobBloc extends Bloc<JobEvent, JobState> {
       if (job.id == event.jobId) {
         final dismissed = job.copyWith(isDismissed: true);
         _learnFromNegative(dismissed, emit);
+        _persistence.saveInteraction(
+          job.id,
+          isSaved: dismissed.isSaved,
+          isApplied: dismissed.isApplied,
+          isDismissed: true,
+        );
         return dismissed;
       }
       return job;

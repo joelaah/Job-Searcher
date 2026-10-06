@@ -248,6 +248,26 @@ The repository includes a GitHub Actions workflow (`.github/workflows/deploy.yml
 
 ---
 
+## 🔐 Data Storage, Session Persistence & PWA Architecture
+
+JOB SeArCh is architected with a privacy-first, frictionless access model engineered for recruiters and candidates alike:
+
+| Layer | Technology | Storage Scope & Security Guarantee |
+|:--|:--|:--|
+| **Client Session Persistence** | `shared_preferences` / Browser `localStorage` | **Instant Resume & Persistence**: Saved roles, application status (`applied`, `dismissed`), and scraped job caches persist across page reloads without forcing mandatory account sign-up. |
+| **Credential Assistant** | Volatile RAM Isolated Vault | **Zero-Knowledge**: Candidate application portal logins remain strictly in browser memory. Passwords and credentials never touch network requests, FastAPI logs, or Supabase tables. |
+| **Vector Engine** | Supabase `pgvector` (PostgreSQL 15) | **HNSW Cosine Similarity**: 768-dimensional job embeddings queryable via secure database RPC functions (`match_jobs`) with sub-millisecond similarity retrieval. |
+| **PWA Installability** | Web Manifest + Service Worker | **Standalone App Experience**: Installable as a native desktop or mobile app directly from Chrome/Edge/Safari with branded Marine Glassmorphism theme shell (`#040C12` background, `#0EA5E9` cyan theme). |
+
+### 📲 Progressive Web App (PWA) Installation
+Recruiters and candidates can install JOB SeArCh directly without app store friction:
+- **Desktop (Chrome / Edge / Brave)**: Click the **Install JOB SeArCh** icon in the URL omnibox or menu -> **Install**.
+- **Mobile (iOS Safari)**: Tap **Share** -> **Add to Home Screen**.
+- **Mobile (Android Chrome)**: Tap **Install App** on the install banner.
+Once installed, it runs in a dedicated standalone window with zero browser chrome, full desktop multitasking, and instant launch capability.
+
+---
+
 ## 🛠️ Technology Stack
 
 | Layer | Technologies |

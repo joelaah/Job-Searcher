@@ -8,6 +8,9 @@ import '../models/local_credential.dart';
 @immutable
 sealed class JobEvent {}
 
+/// Fired on app startup to hydrate saved/applied/dismissed state from localStorage.
+class LoadPersistedState extends JobEvent {}
+
 class SearchQueryChanged extends JobEvent {
   final String query;
   SearchQueryChanged(this.query);
