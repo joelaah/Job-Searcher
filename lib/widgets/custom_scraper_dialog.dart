@@ -180,10 +180,9 @@ class _CustomScraperDialogState extends State<CustomScraperDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       child: Container(
-        width: 740,
-        constraints: const BoxConstraints(maxHeight: 700),
+        constraints: const BoxConstraints(maxWidth: 740, maxHeight: 700),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(24),
@@ -205,7 +204,7 @@ class _CustomScraperDialogState extends State<CustomScraperDialog> {
           children: [
             // Header
             Padding(
-              padding: const EdgeInsets.all(22),
+              padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
                   Container(
@@ -225,7 +224,7 @@ class _CustomScraperDialogState extends State<CustomScraperDialog> {
                         Text(
                           'Live Custom Career URL Scraper',
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 17,
                             fontWeight: FontWeight.w800,
                             color: AppColors.textPrimary,
                             letterSpacing: -0.4,
@@ -233,8 +232,8 @@ class _CustomScraperDialogState extends State<CustomScraperDialog> {
                         ),
                         SizedBox(height: 2),
                         Text(
-                          'Scrape open positions from any Greenhouse, Lever, Ashby, or corporate career page',
-                          style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+                          'Scrape open positions from any Greenhouse, Lever, Ashby, or career page',
+                          style: TextStyle(fontSize: 11.5, color: AppColors.textMuted),
                         ),
                       ],
                     ),
@@ -251,12 +250,15 @@ class _CustomScraperDialogState extends State<CustomScraperDialog> {
 
             // URL Input & Controls
             Padding(
-              padding: const EdgeInsets.fromLTRB(22, 16, 22, 12),
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Presets
-                  Row(
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 6,
+                    runSpacing: 6,
                     children: [
                       const Text(
                         'Quick Links: ',
@@ -266,56 +268,52 @@ class _CustomScraperDialogState extends State<CustomScraperDialog> {
                           color: AppColors.textMuted,
                         ),
                       ),
-                      const SizedBox(width: 6),
                       _presetChip('Linear (Ashby)', 'https://jobs.ashbyhq.com/linear'),
-                      const SizedBox(width: 6),
                       _presetChip('Figma (Greenhouse)', 'https://boards.greenhouse.io/figma'),
-                      const SizedBox(width: 6),
                       _presetChip('Vercel (Greenhouse)', 'https://boards.greenhouse.io/vercel'),
                     ],
                   ),
                   const SizedBox(height: 12),
 
-                  // Input row
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _urlController,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textPrimary,
-                            fontFamily: 'monospace',
+                  // Input row (responsive)
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isCompact = constraints.maxWidth < 460;
+                      final inputField = TextField(
+                        controller: _urlController,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textPrimary,
+                          fontFamily: 'monospace',
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'https://company.com/careers or ATS link',
+                          hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                          prefixIcon: const Icon(Icons.link, size: 18, color: AppColors.cyanAccent),
+                          filled: true,
+                          fillColor: AppColors.surfaceElevated,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: AppColors.surfaceBorder),
                           ),
-                          decoration: InputDecoration(
-                            hintText: 'https://company.com/careers or ATS link',
-                            hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
-                            prefixIcon: const Icon(Icons.link, size: 18, color: AppColors.cyanAccent),
-                            filled: true,
-                            fillColor: AppColors.surfaceElevated,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: AppColors.surfaceBorder),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: AppColors.surfaceBorder),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: AppColors.cyanAccent, width: 1.5),
-                            ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: AppColors.surfaceBorder),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: AppColors.cyanAccent, width: 1.5),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      ElevatedButton.icon(
+                      );
+
+                      final scrapeButton = ElevatedButton.icon(
                         onPressed: _isLoading ? null : _runScraper,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.cyanAccent,
                           foregroundColor: Colors.black,
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           elevation: 0,
                         ),
@@ -333,8 +331,27 @@ class _CustomScraperDialogState extends State<CustomScraperDialog> {
                           _isLoading ? 'Scraping...' : 'Scrape Jobs',
                           style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
                         ),
-                      ),
-                    ],
+                      );
+
+                      if (isCompact) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            inputField,
+                            const SizedBox(height: 10),
+                            scrapeButton,
+                          ],
+                        );
+                      }
+
+                      return Row(
+                        children: [
+                          Expanded(child: inputField),
+                          const SizedBox(width: 12),
+                          scrapeButton,
+                        ],
+                      );
+                    },
                   ),
 
                   if (_sourceStatus.isNotEmpty) ...[
@@ -505,9 +522,12 @@ class _CustomScraperDialogState extends State<CustomScraperDialog> {
 
             // Footer
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 12,
+                runSpacing: 10,
                 children: [
                   Text(
                     _scrapedJobs.isNotEmpty
@@ -516,6 +536,7 @@ class _CustomScraperDialogState extends State<CustomScraperDialog> {
                     style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
                   ),
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(),
@@ -527,7 +548,7 @@ class _CustomScraperDialogState extends State<CustomScraperDialog> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.matchHigh,
                           foregroundColor: Colors.black,
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
                         icon: const Icon(Icons.playlist_add_check, size: 18),

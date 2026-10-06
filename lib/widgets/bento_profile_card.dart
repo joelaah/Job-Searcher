@@ -23,10 +23,9 @@ class _BentoProfileCardState extends State<BentoProfileCard> {
       builder: (dialogCtx) {
         return Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
           child: Container(
-            width: 580,
-            constraints: const BoxConstraints(maxHeight: 650),
+            constraints: const BoxConstraints(maxWidth: 580, maxHeight: 650),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
@@ -43,7 +42,7 @@ class _BentoProfileCardState extends State<BentoProfileCard> {
                 ),
               ],
             ),
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(20),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -52,19 +51,23 @@ class _BentoProfileCardState extends State<BentoProfileCard> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Row(
-                        children: [
-                          Icon(Icons.auto_awesome, color: AppColors.cyanAccent, size: 20),
-                          SizedBox(width: 8),
-                          Text(
-                            'Vectorize Candidate Resume',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.textPrimary,
+                      const Expanded(
+                        child: Row(
+                          children: [
+                            Icon(Icons.auto_awesome, color: AppColors.cyanAccent, size: 20),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Vectorize Candidate Resume',
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                       IconButton(
                         onPressed: () => Navigator.of(dialogCtx).pop(),

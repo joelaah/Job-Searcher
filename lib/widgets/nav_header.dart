@@ -59,57 +59,61 @@ class NavHeader extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Text(
-                                'JOB',
-                                style: TextStyle(
-                                  fontSize: 19,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: -0.5,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              ShaderMask(
-                                shaderCallback: (bounds) =>
-                                    AppColors.primaryGradient
-                                        .createShader(bounds),
-                                child: const Text(
-                                  'SeArCh',
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text(
+                                  'JOB',
                                   style: TextStyle(
                                     fontSize: 19,
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: -0.5,
-                                    color: Colors.white,
+                                    color: AppColors.textPrimary,
                                   ),
                                 ),
-                              ),
-                              if (isDesktop) ...[
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary.withAlpha(40),
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(
-                                      color: AppColors.primary.withAlpha(100),
-                                      width: 1,
-                                    ),
-                                  ),
+                                const SizedBox(width: 4),
+                                ShaderMask(
+                                  shaderCallback: (bounds) =>
+                                      AppColors.primaryGradient
+                                          .createShader(bounds),
                                   child: const Text(
-                                    'RAG + pgvector',
+                                    'SeArCh',
                                     style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.primary,
+                                      fontSize: 19,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: -0.5,
+                                      color: Colors.white,
                                     ),
                                   ),
                                 ),
+                                if (isDesktop) ...[
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary.withAlpha(40),
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(
+                                        color: AppColors.primary.withAlpha(100),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'RAG + pgvector',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ],
-                            ],
+                            ),
                           ),
                           if (isDesktop)
                             const Text(
@@ -224,6 +228,47 @@ class NavHeader extends StatelessWidget {
                       ],
                     ),
                   ),
+                ),
+              ] else ...[
+                const SizedBox(width: 8),
+
+                // Mobile AI Loop Action Icon
+                IconButton(
+                  icon: const Icon(Icons.psychology, size: 20, color: AppColors.secondary),
+                  tooltip: 'AI Loop: ${(state.userProfile.vectorShiftMagnitude * 100).toInt()}%',
+                  padding: const EdgeInsets.all(6),
+                  constraints: const BoxConstraints(),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => BlocProvider.value(
+                        value: context.read<JobBloc>(),
+                        child: const LearningInsightsModal(),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(width: 4),
+
+                // Mobile Supabase Action Icon
+                IconButton(
+                  icon: Icon(
+                    Icons.storage,
+                    size: 20,
+                    color: state.isSupabaseConnected ? AppColors.matchHigh : AppColors.textMuted,
+                  ),
+                  tooltip: state.isSupabaseConnected ? 'Supabase Connected' : 'Connect DB',
+                  padding: const EdgeInsets.all(6),
+                  constraints: const BoxConstraints(),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => BlocProvider.value(
+                        value: context.read<JobBloc>(),
+                        child: const SupabaseConfigDialog(),
+                      ),
+                    );
+                  },
                 ),
               ],
             ],

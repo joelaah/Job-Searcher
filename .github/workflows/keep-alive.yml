@@ -1,0 +1,94 @@
+name: Supabase Keep-Alive Pulse
+
+on:
+  schedule:
+    # Runs every 2 days at 06:00 UTC (well within Supabase's 7-day inactivity pause window)
+    - cron: '0 6 */2 * *'
+  workflow_dispatch: # Allows manual trigger anytime from GitHub Actions tab
+
+jobs:
+  keep-alive:
+    name: Keep Alive Supabase Databases
+    runs-on: ubuntu-latest
+    steps:
+      # ────────────────────────────────────────────────────────
+      # 1. Job Searcher Supabase Keep-Alive
+      # ────────────────────────────────────────────────────────
+      - name: Ping Job Searcher Supabase (PostgreSQL & Auth)
+        env:
+          JOB_SEARCH_URL: ${{ secrets.JOB_SEARCH_SUPABASE_URL }}
+          JOB_SEARCH_KEY: ${{ secrets.JOB_SEARCH_SUPABASE_ANON_KEY }}
+        run: |
+          echo "=========================================================="
+          echo "⚡ Pinging Job Searcher Supabase Project..."
+          echo "=========================================================="
+          if [ -z "$JOB_SEARCH_URL" ] || [ -z "$JOB_SEARCH_KEY" ]; then
+            echo "❌ Error: JOB_SEARCH_SUPABASE_URL or JOB_SEARCH_SUPABASE_ANON_KEY secret is not set."
+            exit 1
+          fi
+
+          # 1. PostgREST Active DB Query (select from jobs table to reset Postgres pause counter)
+          echo "1. Querying PostgreSQL Database via PostgREST (/rest/v1/jobs)..."
+          HTTP_STATUS_DB=$(curl -s -o /dev/null -w "%{http_code}" -X GET "${JOB_SEARCH_URL}/rest/v1/jobs?select=id&limit=1" \
+            -H "apikey: ${JOB_SEARCH_KEY}" \
+            -H "Authorization: Bearer ${JOB_SEARCH_KEY}" || echo "FAILED")
+          echo "   PostgreSQL Query Status: ${HTTP_STATUS_DB}"
+
+          # 2. Auth Service Settings Query
+          echo "2. Querying Auth Service Settings (/auth/v1/settings)..."
+          HTTP_STATUS_AUTH=$(curl -s -o /dev/null -w "%{http_code}" -X GET "${JOB_SEARCH_URL}/auth/v1/settings" \
+            -H "apikey: ${JOB_SEARCH_KEY}" || echo "FAILED")
+          echo "   Auth Service Status: ${HTTP_STATUS_AUTH}"
+
+          # 3. Auth Health Query
+          echo "3. Querying Auth Health (/auth/v1/health)..."
+          HTTP_STATUS_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" -X GET "${JOB_SEARCH_URL}/auth/v1/health" \
+            -H "apikey: ${JOB_SEARCH_KEY}" || echo "FAILED")
+          echo "   Auth Health Status: ${HTTP_STATUS_HEALTH}"
+
+          if [ "$HTTP_STATUS_DB" = "200" ] || [ "$HTTP_STATUS_AUTH" = "200" ]; then
+            echo "✅ Job Searcher Supabase is ACTIVE and KEEP-ALIVE pulse succeeded."
+          else
+            echo "⚠️ Warning: Non-200 responses received (DB: ${HTTP_STATUS_DB}, Auth: ${HTTP_STATUS_AUTH})"
+          fi
+
+      # ────────────────────────────────────────────────────────
+      # 2. Fitness App Supabase Keep-Alive
+      # ────────────────────────────────────────────────────────
+      - name: Ping Fitness App Supabase (PostgreSQL & Auth)
+        env:
+          FITNESS_URL: ${{ secrets.FITNESS_SUPABASE_URL }}
+          FITNESS_KEY: ${{ secrets.FITNESS_APP_SUPABASE_ANON_KEY }}
+        run: |
+          echo "=========================================================="
+          echo "🏋️ Pinging Fitness App Supabase Project..."
+          echo "=========================================================="
+          if [ -z "$FITNESS_URL" ] || [ -z "$FITNESS_KEY" ]; then
+            echo "❌ Error: FITNESS_SUPABASE_URL or FITNESS_APP_SUPABASE_ANON_KEY secret is not set."
+            exit 1
+          fi
+
+          # 1. PostgREST Active DB Query (select from profiles table to reset Postgres pause counter)
+          echo "1. Querying PostgreSQL Database via PostgREST (/rest/v1/profiles)..."
+          HTTP_STATUS_DB=$(curl -s -o /dev/null -w "%{http_code}" -X GET "${FITNESS_URL}/rest/v1/profiles?select=id&limit=1" \
+            -H "apikey: ${FITNESS_KEY}" \
+            -H "Authorization: Bearer ${FITNESS_KEY}" || echo "FAILED")
+          echo "   PostgreSQL Query Status: ${HTTP_STATUS_DB}"
+
+          # 2. Auth Service Settings Query
+          echo "2. Querying Auth Service Settings (/auth/v1/settings)..."
+          HTTP_STATUS_AUTH=$(curl -s -o /dev/null -w "%{http_code}" -X GET "${FITNESS_URL}/auth/v1/settings" \
+            -H "apikey: ${FITNESS_KEY}" || echo "FAILED")
+          echo "   Auth Service Status: ${HTTP_STATUS_AUTH}"
+
+          # 3. Auth Health Query
+          echo "3. Querying Auth Health (/auth/v1/health)..."
+          HTTP_STATUS_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" -X GET "${FITNESS_URL}/auth/v1/health" \
+            -H "apikey: ${FITNESS_KEY}" || echo "FAILED")
+          echo "   Auth Health Status: ${HTTP_STATUS_HEALTH}"
+
+          if [ "$HTTP_STATUS_DB" = "200" ] || [ "$HTTP_STATUS_AUTH" = "200" ]; then
+            echo "✅ Fitness App Supabase is ACTIVE and KEEP-ALIVE pulse succeeded."
+          else
+            echo "⚠️ Warning: Non-200 responses received (DB: ${HTTP_STATUS_DB}, Auth: ${HTTP_STATUS_AUTH})"
+          fi

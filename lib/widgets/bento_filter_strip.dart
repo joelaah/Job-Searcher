@@ -211,7 +211,7 @@ class BentoFilterStrip extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    _buildScoreSlider(context, bloc, state),
+                    _buildScoreSlider(context, bloc, state, isMobile: true),
                   ],
                 ),
             ],
@@ -221,9 +221,26 @@ class BentoFilterStrip extends StatelessWidget {
     );
   }
 
-  Widget _buildScoreSlider(BuildContext context, JobBloc bloc, JobState state) {
+  Widget _buildScoreSlider(BuildContext context, JobBloc bloc, JobState state, {bool isMobile = false}) {
+    final sliderWidget = SliderTheme(
+      data: SliderTheme.of(context).copyWith(
+        activeTrackColor: AppColors.primary,
+        thumbColor: AppColors.primary,
+        inactiveTrackColor: AppColors.surfaceBorder,
+        trackHeight: 3,
+        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+      ),
+      child: Slider(
+        value: state.minMatchScore.toDouble(),
+        min: 50,
+        max: 95,
+        divisions: 9,
+        onChanged: (val) => bloc.add(MinMatchScoreChanged(val.toInt())),
+      ),
+    );
+
     return Row(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: isMobile ? MainAxisSize.max : MainAxisSize.min,
       children: [
         const Text(
           'Min Match:',
@@ -250,25 +267,13 @@ class BentoFilterStrip extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(
-          width: 130,
-          child: SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: AppColors.primary,
-              thumbColor: AppColors.primary,
-              inactiveTrackColor: AppColors.surfaceBorder,
-              trackHeight: 3,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-            ),
-            child: Slider(
-              value: state.minMatchScore.toDouble(),
-              min: 50,
-              max: 95,
-              divisions: 9,
-              onChanged: (val) => bloc.add(MinMatchScoreChanged(val.toInt())),
-            ),
+        if (isMobile)
+          Expanded(child: sliderWidget)
+        else
+          SizedBox(
+            width: 130,
+            child: sliderWidget,
           ),
-        ),
       ],
     );
   }

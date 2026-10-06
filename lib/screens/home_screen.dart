@@ -315,20 +315,23 @@ class HomeScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: AppColors.surfaceBorder),
           ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.sort, size: 13, color: AppColors.secondary),
-              SizedBox(width: 5),
-              Text(
-                'Cosine Similarity (pgvector)',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.secondary,
+          child: const FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.sort, size: 13, color: AppColors.secondary),
+                SizedBox(width: 5),
+                Text(
+                  'Cosine Similarity (pgvector)',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.secondary,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],

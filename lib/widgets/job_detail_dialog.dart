@@ -95,91 +95,13 @@ class _JobDetailDialogState extends State<JobDetailDialog>
               children: [
                 // Header
                 Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 46,
-                        height: 46,
-                        decoration: BoxDecoration(
-                          gradient: AppColors.primaryGradient,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          job.company.substring(0, 1),
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              job.title,
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            Wrap(
-                              spacing: 4,
-                              runSpacing: 4,
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              children: [
-                                Text(
-                                  job.company,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                                const Text('•',
-                                    style: TextStyle(
-                                        color: AppColors.textMuted)),
-                                Text(
-                                  job.location,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                                if (job.isRemote)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 5, vertical: 1),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          AppColors.cyanAccent.withAlpha(30),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: const Text(
-                                      'Remote',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.cyanAccent,
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
+                  padding: const EdgeInsets.all(18),
+                  child: LayoutBuilder(
+                    builder: (context, headerConstraints) {
+                      final isCompact = headerConstraints.maxWidth < 500;
+                      final scoreBadge = Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
+                            horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
                           color: scoreColor.withAlpha(25),
                           borderRadius: BorderRadius.circular(10),
@@ -187,17 +109,18 @@ class _JobDetailDialogState extends State<JobDetailDialog>
                               Border.all(color: scoreColor.withAlpha(100)),
                         ),
                         child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(Icons.auto_awesome,
-                                    size: 14, color: scoreColor),
+                                    size: 13, color: scoreColor),
                                 const SizedBox(width: 4),
                                 Text(
                                   '${job.matchScore}%',
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 15,
                                     fontWeight: FontWeight.w800,
                                     color: scoreColor,
                                   ),
@@ -214,14 +137,186 @@ class _JobDetailDialogState extends State<JobDetailDialog>
                             ),
                           ],
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
+                      );
+
+                      final avatar = Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          gradient: AppColors.primaryGradient,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          job.company.substring(0, 1),
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                      );
+
+                      final closeBtn = IconButton(
                         icon: const Icon(Icons.close,
                             color: AppColors.textMuted, size: 20),
                         onPressed: () => Navigator.of(context).pop(),
-                      ),
-                    ],
+                        splashRadius: 18,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      );
+
+                      if (isCompact) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                avatar,
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        job.title,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 3),
+                                      Wrap(
+                                        spacing: 4,
+                                        runSpacing: 4,
+                                        crossAxisAlignment: WrapCrossAlignment.center,
+                                        children: [
+                                          Text(
+                                            job.company,
+                                            style: const TextStyle(
+                                              fontSize: 12.5,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppColors.primary,
+                                            ),
+                                          ),
+                                          const Text('•',
+                                              style: TextStyle(color: AppColors.textMuted)),
+                                          Text(
+                                            job.location,
+                                            style: const TextStyle(
+                                              fontSize: 11.5,
+                                              color: AppColors.textSecondary,
+                                            ),
+                                          ),
+                                          if (job.isRemote)
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(
+                                                  horizontal: 5, vertical: 1),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.cyanAccent.withAlpha(30),
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                              child: const Text(
+                                                'Remote',
+                                                style: TextStyle(
+                                                  fontSize: 9.5,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: AppColors.cyanAccent,
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                closeBtn,
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                scoreBadge,
+                              ],
+                            ),
+                          ],
+                        );
+                      }
+
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          avatar,
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  job.title,
+                                  style: const TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Wrap(
+                                  spacing: 4,
+                                  runSpacing: 4,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  children: [
+                                    Text(
+                                      job.company,
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                    const Text('•',
+                                        style: TextStyle(
+                                            color: AppColors.textMuted)),
+                                    Text(
+                                      job.location,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                    if (job.isRemote)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 5, vertical: 1),
+                                        decoration: BoxDecoration(
+                                          color:
+                                              AppColors.cyanAccent.withAlpha(30),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: const Text(
+                                          'Remote',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.cyanAccent,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          scoreBadge,
+                          const SizedBox(width: 8),
+                          closeBtn,
+                        ],
+                      );
+                    },
                   ),
                 ),
 
@@ -471,46 +566,54 @@ class _JobDetailDialogState extends State<JobDetailDialog>
 
                 // Bottom Actions
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: const BoxDecoration(
                     border: Border(
                       top: BorderSide(color: AppColors.surfaceBorder),
                     ),
                   ),
-                  child: Row(
+                  child: Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
-                      OutlinedButton.icon(
-                        onPressed: () => context
-                            .read<JobBloc>()
-                            .add(ToggleSaveJob(job.id)),
-                        icon: Icon(
-                          job.isSaved
-                              ? Icons.bookmark
-                              : Icons.bookmark_border,
-                          size: 16,
-                          color: job.isSaved
-                              ? AppColors.primary
-                              : AppColors.textSecondary,
-                        ),
-                        label: Text(
-                          job.isSaved ? 'Saved' : 'Save',
-                          style: const TextStyle(fontSize: 12),
-                        ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          OutlinedButton.icon(
+                            onPressed: () => context
+                                .read<JobBloc>()
+                                .add(ToggleSaveJob(job.id)),
+                            icon: Icon(
+                              job.isSaved
+                                  ? Icons.bookmark
+                                  : Icons.bookmark_border,
+                              size: 16,
+                              color: job.isSaved
+                                  ? AppColors.primary
+                                  : AppColors.textSecondary,
+                            ),
+                            label: Text(
+                              job.isSaved ? 'Saved' : 'Save',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          OutlinedButton.icon(
+                            onPressed: () {
+                              context
+                                  .read<JobBloc>()
+                                  .add(DismissJob(job.id));
+                              Navigator.of(context).pop();
+                            },
+                            icon: const Icon(Icons.close,
+                                color: AppColors.textMuted, size: 16),
+                            label: const Text('Pass',
+                                style: TextStyle(fontSize: 12)),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      OutlinedButton.icon(
-                        onPressed: () {
-                          context
-                              .read<JobBloc>()
-                              .add(DismissJob(job.id));
-                          Navigator.of(context).pop();
-                        },
-                        icon: const Icon(Icons.close,
-                            color: AppColors.textMuted, size: 16),
-                        label: const Text('Pass',
-                            style: TextStyle(fontSize: 12)),
-                      ),
-                      const Spacer(),
                       ElevatedButton.icon(
                         onPressed: () {
                           context

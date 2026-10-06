@@ -76,111 +76,114 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection>
               // ══════════════════════════════════════════
               // Top Banner: Cyber Badge & Controls
               // ══════════════════════════════════════════
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            AnimatedBuilder(
-                              animation: _pulseAnimation,
-                              builder: (context, child) {
-                                return Transform.scale(
-                                  scale: _pulseAnimation.value,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 4,
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isCompact = constraints.maxWidth < 700;
+                  final badges = Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      AnimatedBuilder(
+                        animation: _pulseAnimation,
+                        builder: (context, child) {
+                          return Transform.scale(
+                            scale: _pulseAnimation.value,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.secondary.withAlpha(30),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: AppColors.secondary,
+                                ),
+                              ),
+                              child: const FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.auto_awesome,
+                                      size: 12,
+                                      color: AppColors.secondary,
                                     ),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.secondary.withAlpha(30),
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
+                                    SizedBox(width: 5),
+                                    Text(
+                                      'AUTONOMOUS LEARNING LOOP',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 0.8,
                                         color: AppColors.secondary,
                                       ),
                                     ),
-                                    child: const Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.auto_awesome,
-                                          size: 12,
-                                          color: AppColors.secondary,
-                                        ),
-                                        SizedBox(width: 5),
-                                        Text(
-                                          'AUTONOMOUS LEARNING LOOP',
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w900,
-                                            letterSpacing: 0.8,
-                                            color: AppColors.secondary,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                            const SizedBox(width: 10),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withAlpha(25),
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: AppColors.primary.withAlpha(70),
-                                ),
-                              ),
-                              child: const Text(
-                                '768-D Vector Steering',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.primary,
+                                  ],
                                 ),
                               ),
                             ),
-                          ],
+                          );
+                        },
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
                         ),
-                        const SizedBox(height: 10),
-                        ShaderMask(
-                          shaderCallback: (bounds) => AppColors
-                              .emeraldBlueGradient
-                              .createShader(bounds),
-                          child: const Text(
-                            'Continuous Latent Vector Adaptation Engine',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                              letterSpacing: -0.5,
-                            ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withAlpha(25),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: AppColors.primary.withAlpha(70),
                           ),
                         ),
-                        const SizedBox(height: 6),
-                        const Text(
-                          'Interact with positions or adjust tactile steering sliders below to physically warp your 768-dimensional embedding in Supabase pgvector.',
+                        child: const Text(
+                          '768-D Vector Steering',
                           style: TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                            height: 1.45,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
                           ),
                         ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    ],
+                  );
 
-                  // Modal Launcher Button
-                  OutlinedButton.icon(
+                  final titleSection = Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      badges,
+                      const SizedBox(height: 10),
+                      ShaderMask(
+                        shaderCallback: (bounds) => AppColors
+                            .emeraldBlueGradient
+                            .createShader(bounds),
+                        child: Text(
+                          'Continuous Latent Vector Adaptation Engine',
+                          style: TextStyle(
+                            fontSize: isCompact ? 18 : 22,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Interact with positions or adjust tactile steering sliders below to physically warp your 768-dimensional embedding in Supabase pgvector.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                          height: 1.45,
+                        ),
+                      ),
+                    ],
+                  );
+
+                  final insightsBtn = OutlinedButton.icon(
                     icon: const Icon(
                       Icons.analytics_outlined,
                       size: 16,
@@ -206,8 +209,28 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection>
                         ),
                       );
                     },
-                  ),
-                ],
+                  );
+
+                  if (isCompact) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        titleSection,
+                        const SizedBox(height: 14),
+                        insightsBtn,
+                      ],
+                    );
+                  }
+
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: titleSection),
+                      const SizedBox(width: 16),
+                      insightsBtn,
+                    ],
+                  );
+                },
               ),
 
               const SizedBox(height: 24),
@@ -453,21 +476,24 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection>
             spacing: 8,
             runSpacing: 6,
             children: [
-              const Row(
+              Row(
                 mainAxisSize: MainAxisSize.min,
-                children: [
+                children: const [
                   Icon(
                     Icons.explore_outlined,
                     size: 17,
                     color: AppColors.cyanAccent,
                   ),
                   SizedBox(width: 8),
-                  Text(
-                    'Career Alignment & Gravity',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                  Flexible(
+                    child: Text(
+                      'Career Alignment & Gravity',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -628,12 +654,15 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      role,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                    Flexible(
+                      child: Text(
+                        role,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(width: 5),
@@ -1075,14 +1104,17 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection>
               Icon(Icons.check, size: 11, color: activeColor),
               const SizedBox(width: 5),
             ],
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected
-                    ? AppColors.textPrimary
-                    : AppColors.textSecondary,
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected
+                      ? AppColors.textPrimary
+                      : AppColors.textSecondary,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],

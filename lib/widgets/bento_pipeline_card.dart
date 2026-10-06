@@ -39,29 +39,34 @@ class BentoPipelineCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.cyanAccent.withAlpha(35),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppColors.cyanAccent.withAlpha(80)),
+                  Flexible(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.cyanAccent.withAlpha(35),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: AppColors.cyanAccent.withAlpha(80)),
+                          ),
+                          child: const Icon(Icons.cloud_sync_outlined, size: 16, color: AppColors.cyanAccent),
                         ),
-                        child: const Icon(Icons.cloud_sync_outlined, size: 16, color: AppColors.cyanAccent),
-                      ),
-                      const SizedBox(width: 10),
-                      const Text(
-                        'Cloud & Pipeline',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                          letterSpacing: -0.3,
+                        const SizedBox(width: 10),
+                        const Flexible(
+                          child: Text(
+                            'Cloud & Pipeline',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textPrimary,
+                              letterSpacing: -0.3,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   Container(
                     width: 8,
@@ -153,20 +158,23 @@ class BentoPipelineCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: AppColors.cyanAccent.withAlpha(80)),
                         ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.travel_explore, size: 13, color: AppColors.cyanAccent),
-                            SizedBox(width: 5),
-                            Text(
-                              'Scrape URL',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.cyanAccent,
+                        child: const FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.travel_explore, size: 13, color: AppColors.cyanAccent),
+                              SizedBox(width: 5),
+                              Text(
+                                'Scrape URL',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.cyanAccent,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -191,20 +199,23 @@ class BentoPipelineCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: AppColors.matchHigh.withAlpha(75)),
                         ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.shield_outlined, size: 13, color: AppColors.matchHigh),
-                            SizedBox(width: 5),
-                            Text(
-                              'CSV Vault',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.matchHigh,
+                        child: const FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.shield_outlined, size: 13, color: AppColors.matchHigh),
+                              SizedBox(width: 5),
+                              Text(
+                                'CSV Vault',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.matchHigh,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),

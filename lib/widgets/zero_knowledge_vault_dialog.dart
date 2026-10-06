@@ -116,10 +116,9 @@ workday.com,candidate.alex@dev.io,WorkdaySec789!,C:/Resumes/Alex_Vance_Resume.pd
 
         return Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
           child: Container(
-            width: 820,
-            constraints: const BoxConstraints(maxHeight: 760),
+            constraints: const BoxConstraints(maxWidth: 820, maxHeight: 760),
             decoration: BoxDecoration(
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(24),
@@ -220,8 +219,11 @@ workday.com,candidate.alex@dev.io,WorkdaySec789!,C:/Resumes/Alex_Vance_Resume.pd
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // CSV Input Section
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        Wrap(
+                          alignment: WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 8,
+                          runSpacing: 4,
                           children: [
                             const Text(
                               'Import Accounts via .CSV',

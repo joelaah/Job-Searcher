@@ -722,7 +722,8 @@ class JobBloc extends Bloc<JobEvent, JobState> {
         ),
       ],
       supabaseUrl: 'https://apezpfkigivawkufnurw.supabase.co',
-      supabaseAnonKey: 'sb_publishable_Ij8knuo7DgZPtfw9Zv0F3A_BSUOYJZY',
+      supabaseAnonKey:
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwZXpwZmtpZ2l2YXdrdWZudXJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNjk1ODEsImV4cCI6MjEwNTk0NTU4MX0.tZqIWVs6_Bj5hONgOb1G_McXrgBaH54db-aPeKCNYZE',
       isSupabaseConnected: true,
     );
   }

@@ -368,10 +368,11 @@ class _BentoJobCardState extends State<BentoJobCard> {
             const SizedBox(height: 18),
 
             // Action Strip
-            Row(
-              children: [
-                // Bookmark / Save
-                InkWell(
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isNarrow = constraints.maxWidth < 360;
+
+                final bookmarkBtn = InkWell(
                   onTap: () => bloc.add(ToggleSaveJob(job.id)),
                   borderRadius: BorderRadius.circular(10),
                   child: Container(
@@ -389,58 +390,54 @@ class _BentoJobCardState extends State<BentoJobCard> {
                       color: job.isSaved ? AppColors.secondary : AppColors.textMuted,
                     ),
                   ),
-                ),
+                );
 
-                const SizedBox(width: 8),
-
-                // View Details Button
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: _openDetailDialog,
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 11),
-                      side: const BorderSide(color: AppColors.surfaceBorder),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    child: const Text('AI Analysis', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                final detailsBtn = OutlinedButton(
+                  onPressed: _openDetailDialog,
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 11),
+                    side: const BorderSide(color: AppColors.surfaceBorder),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
-                ),
+                  child: const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text('AI Analysis', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                  ),
+                );
 
-                const SizedBox(width: 8),
-
-                // Quick Apply Button
-                ElevatedButton(
+                final applyBtn = ElevatedButton(
                   onPressed: () => _applyJob(job),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: job.isApplied ? AppColors.surfaceElevated : AppColors.primary,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        job.isApplied ? Icons.check : Icons.bolt,
-                        size: 14,
-                        color: job.isApplied ? AppColors.matchHigh : Colors.white,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        job.isApplied ? 'Applied' : 'Apply',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          job.isApplied ? Icons.check : Icons.bolt,
+                          size: 14,
                           color: job.isApplied ? AppColors.matchHigh : Colors.white,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 4),
+                        Text(
+                          job.isApplied ? 'Applied' : 'Apply',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: job.isApplied ? AppColors.matchHigh : Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                );
 
-                const SizedBox(width: 6),
-
-                // 🚀 Auto Apply Button
-                BlocBuilder<JobBloc, JobState>(
+                final autoApplyBtn = BlocBuilder<JobBloc, JobState>(
                   buildWhen: (prev, curr) =>
                       prev.autoApplyStatuses[job.id]?.status !=
                       curr.autoApplyStatuses[job.id]?.status,
@@ -459,48 +456,86 @@ class _BentoJobCardState extends State<BentoJobCard> {
                             : isRunning
                                 ? AppColors.surfaceElevated
                                 : AppColors.cyanAccent,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 11),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         disabledBackgroundColor: isSuccess
                             ? AppColors.matchHigh.withAlpha(180)
                             : AppColors.surfaceElevated,
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (isRunning)
-                            const SizedBox(
-                              width: 12, height: 12,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppColors.cyanAccent,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (isRunning)
+                              const SizedBox(
+                                width: 12, height: 12,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.cyanAccent,
+                                ),
+                              )
+                            else
+                              Icon(
+                                isSuccess ? Icons.check_circle : Icons.rocket_launch,
+                                size: 14,
+                                color: isSuccess ? Colors.black : Colors.black87,
                               ),
-                            )
-                          else
-                            Icon(
-                              isSuccess ? Icons.check_circle : Icons.rocket_launch,
-                              size: 14,
-                              color: isSuccess ? Colors.black : Colors.black87,
+                            const SizedBox(width: 4),
+                            Text(
+                              isRunning
+                                  ? 'Filling...'
+                                  : isSuccess
+                                      ? 'Filled ✓'
+                                      : 'Auto Apply',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: isSuccess ? Colors.black : Colors.black87,
+                              ),
                             ),
-                          const SizedBox(width: 4),
-                          Text(
-                            isRunning
-                                ? 'Filling...'
-                                : isSuccess
-                                    ? 'Filled ✓'
-                                    : 'Auto Apply',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              color: isSuccess ? Colors.black : Colors.black87,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     );
                   },
-                ),
-              ],
+                );
+
+                if (isNarrow) {
+                  return Column(
+                    children: [
+                      Row(
+                        children: [
+                          bookmarkBtn,
+                          const SizedBox(width: 8),
+                          Expanded(child: detailsBtn),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(child: applyBtn),
+                          const SizedBox(width: 8),
+                          Expanded(child: autoApplyBtn),
+                        ],
+                      ),
+                    ],
+                  );
+                }
+
+                return Row(
+                  children: [
+                    bookmarkBtn,
+                    const SizedBox(width: 8),
+                    Expanded(child: detailsBtn),
+                    const SizedBox(width: 8),
+                    applyBtn,
+                    const SizedBox(width: 6),
+                    autoApplyBtn,
+                  ],
+                );
+              },
             ),
           ],
         ),

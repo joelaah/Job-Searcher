@@ -51,6 +51,7 @@ backend/.env
 *.pem
 *.key
 *.secret
+SESSION_HANDOVER_CONTEXT.md
 
 # Python
 __pycache__/
