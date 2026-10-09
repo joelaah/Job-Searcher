@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
 import '../models/job_model.dart';
@@ -780,7 +781,12 @@ class JobBloc extends Bloc<JobEvent, JobState> {
   // Auto-Apply Engine Handlers
   // ══════════════════════════════════════════════════
 
-  static const String _backendUrl = 'http://localhost:8000';
+  static const String _defaultBackendUrl = String.fromEnvironment(
+    'BACKEND_URL',
+    defaultValue: 'http://localhost:8000',
+  );
+
+  bool get _isHttpsWebOrigin => kIsWeb && Uri.base.scheme == 'https';
 
   void _onAutoApplyJob(AutoApplyJob event, Emitter<JobState> emit) async {
     // Set initial pending status
@@ -789,12 +795,22 @@ class JobBloc extends Bloc<JobEvent, JobState> {
       jobId: event.jobId,
       status: 'running',
       message: 'Launching auto-apply engine...',
+      log: ['[Engine] Initializing candidate profile and browser engine...'],
     );
     emit(state.copyWith(autoApplyStatuses: statuses));
 
+    // Handle HTTPS Web Demo environment (GitHub Pages)
+    // Modern browsers enforce Strict Mixed Content Blocking on HTTPS origins,
+    // which prevents direct unencrypted HTTP calls to http://localhost:8000.
+    final hasSecureBackend = _defaultBackendUrl.startsWith('https://');
+    if (_isHttpsWebOrigin && !hasSecureBackend) {
+      await _runWebDemoAutoApplySimulation(event, emit);
+      return;
+    }
+
     try {
       final response = await http.post(
-        Uri.parse('$_backendUrl/api/auto-apply'),
+        Uri.parse('$_defaultBackendUrl/api/auto-apply'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'job_url': event.jobUrl,
@@ -838,13 +854,79 @@ class JobBloc extends Bloc<JobEvent, JobState> {
       }
     } catch (e) {
       final updatedStatuses = Map<String, AutoApplyStatus>.from(state.autoApplyStatuses);
+      final isMixedContent = _isHttpsWebOrigin && _defaultBackendUrl.startsWith('http://');
+      final errorMsg = isMixedContent
+          ? 'Strict Mixed Content Blocked: HTTPS web app cannot make unencrypted HTTP requests to $_defaultBackendUrl. Deploy an HTTPS backend tunnel or run the desktop app.'
+          : 'Connection failed: $e. Is the backend running on $_defaultBackendUrl?';
+
       updatedStatuses[event.jobId] = AutoApplyStatus(
         jobId: event.jobId,
         status: 'error',
-        message: 'Connection failed: $e. Is the backend running on localhost:8000?',
+        message: errorMsg,
+        log: [
+          '[Engine] Connection error encountered',
+          if (isMixedContent)
+            '[Security] Browser policy prevents HTTPS -> HTTP mixed content.'
+          else
+            '[Network] Verify local FastAPI backend is active.',
+        ],
       );
       emit(state.copyWith(autoApplyStatuses: updatedStatuses));
     }
+  }
+
+  Future<void> _runWebDemoAutoApplySimulation(
+    AutoApplyJob event,
+    Emitter<JobState> emit,
+  ) async {
+    final atsType = _detectAtsType(event.jobUrl);
+    final demoLogs = <String>[
+      '[Web Demo] 🌐 Running in GitHub Pages HTTPS Sandbox',
+      '[Web Demo] Target ATS Detected: $atsType (${event.jobCompany})',
+      '[Web Demo] Loading Zero-Knowledge Profile (Joel Lalruatkima · Aizawl, India)',
+      '[Web Demo] Applying work authorization safeguards (Jurisdiction: International / Remote)',
+      '[Web Demo] Pre-filling form fields: Contact Info, Links, Resume & Custom Q&A',
+      '[Web Demo] Human-in-the-loop review mode active — form prepared (not auto-submitted)',
+    ];
+
+    await Future.delayed(const Duration(milliseconds: 300));
+    final intermediateStatuses = Map<String, AutoApplyStatus>.from(state.autoApplyStatuses);
+    intermediateStatuses[event.jobId] = AutoApplyStatus(
+      jobId: event.jobId,
+      status: 'running',
+      message: 'Filling application form on $atsType...',
+      log: demoLogs.sublist(0, 3),
+    );
+    emit(state.copyWith(autoApplyStatuses: intermediateStatuses));
+
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    final finalStatuses = Map<String, AutoApplyStatus>.from(state.autoApplyStatuses);
+    finalStatuses[event.jobId] = AutoApplyStatus(
+      jobId: event.jobId,
+      status: 'success',
+      message: 'Application form filled! 8 fields simulated in Web Demo mode. (Run local desktop build for live Playwright automation)',
+      fieldsFilled: 8,
+      log: demoLogs,
+    );
+
+    final updatedJobs = state.allJobs.map((j) {
+      if (j.id == event.jobId) return j.copyWith(isApplied: true);
+      return j;
+    }).toList();
+
+    emit(state.copyWith(
+      autoApplyStatuses: finalStatuses,
+      allJobs: updatedJobs,
+    ));
+  }
+
+  String _detectAtsType(String url) {
+    final lower = url.toLowerCase();
+    if (lower.contains('ashby')) return 'Ashby';
+    if (lower.contains('greenhouse')) return 'Greenhouse';
+    if (lower.contains('lever')) return 'Lever';
+    return 'Generic ATS';
   }
 
   void _onAutoApplyStatusUpdate(AutoApplyStatusUpdate event, Emitter<JobState> emit) {

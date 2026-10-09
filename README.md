@@ -95,10 +95,11 @@ flowchart TB
 
 ### Core Innovations
 1. **Marine Glassmorphism Bento Grid**: Bespoke dark-mode UI (`#0A192F` navy with `#00E5FF` electric cyan and `#26A69A` seafoam accents) featuring real-time market salary telemetry, candidate percentile radar, and interactive filter strips.
-2. **2D Latent Space Constellation Visualizer**: Canvas rendering cosine proximity between the candidate vector and live job clusters in dynamic orbit.
-3. **Zero-Knowledge Local Credential Vault**: Candidate application logins exist solely within browser RAM. Passwords are never sent to the backend, database, or third parties. Includes 1-click clipboard auto-fill.
-4. **Multi-Source Live ATS Scraper**: Headless extraction for **Ashby**, **Greenhouse**, and **Lever**, plus an arbitrary URL crawler with anti-bot fallback (`scrapling`).
-5. **Adaptive Reinforcement Feedback**: Every candidate action (*Saved*, *Applied*, *Dismissed*) dynamically recalculates domain biases, tech-stack affinities, and seniority steering vectors in real time.
+2. **2D Latent Space Constellation Visualizer**: Canvas rendering real-time semantic affinity and cosine proximity between candidate preferences and live job clusters in dynamic orbit.
+3. **Zero-Knowledge Local Credential Vault**: Candidate application logins exist solely within local RAM/client state. Passwords are never sent to remote backends or databases, protecting applicant credentials.
+4. **Autonomous ATS Auto-Applier (Playwright Engine)**: Headless browser automation driver with stealth anti-detection (Cloudflare Turnstile mitigation) and human-in-the-loop review for **Ashby**, **Greenhouse**, and **Lever** forms. Never auto-submits without explicit applicant verification.
+5. **Dynamic Heuristic Re-ranking & Semantic Affinity Loop**: Client-side reactive BLoC state recalculates domain biases, tech-stack affinities, and role steering vectors in real time, paired with an offline/backend 768-dim dense embedding pipeline (FastEmbed `bge-base-en-v1.5` + Supabase `pgvector` HNSW index).
+6. **Web Demo Mixed Content Resilience**: On hosted HTTPS web environments (e.g., GitHub Pages), the client employs direct public ATS endpoints and an interactive simulation mode, avoiding browser Strict Mixed Content blocks while allowing full live Playwright automation in local desktop environments.
 
 ---
 
@@ -110,7 +111,8 @@ The Python FastAPI backend exposes high-performance REST endpoints protected by 
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/health` | 60/min | System and scraper health telemetry |
 | `POST` | `/api/scrape-url` | 10/min | Live headless extraction from an arbitrary careers URL |
-| `POST` | `/api/scrape-all` | 2/hour | Batch synchronization across Greenhouse, Lever, and Ashby boards |
+| `POST` | `/api/auto-apply` | 15/min | Playwright stealth form pre-filler with human-in-the-loop controls |
+| `GET` | `/api/profile/status` | 30/min | Local candidate profile verification status |
 
 ### Live URL Scraper Payload (`POST /api/scrape-url`)
 ```bash

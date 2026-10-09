@@ -18,7 +18,7 @@ Key Lever quirks:
 import asyncio
 from playwright.async_api import Page, TimeoutError as PlaywrightTimeout
 
-from .question_answerer import answer_screening_question
+from .question_answerer import answer_screening_question, determine_work_auth_answer
 
 
 async def fill_lever_form(
@@ -227,19 +227,11 @@ async def _fill_lever_custom_questions(
             # Select/Dropdown
             select = group.locator("select")
             if await select.count() > 0:
-                q_lower = question_text.lower()
-                if "authorized" in q_lower or "eligible" in q_lower:
-                    val = "Yes" if profile_dict.get("authorized_to_work", True) else "No"
+                auth_val = determine_work_auth_answer(question_text, profile_dict)
+                if auth_val:
                     try:
-                        await select.first.select_option(label=val)
-                        log.append(f"[Lever] Selected '{val}' for auth question")
-                    except Exception:
-                        pass
-                elif "sponsorship" in q_lower:
-                    val = "Yes" if profile_dict.get("requires_sponsorship", False) else "No"
-                    try:
-                        await select.first.select_option(label=val)
-                        log.append(f"[Lever] Selected '{val}' for sponsorship")
+                        await select.first.select_option(label=auth_val)
+                        log.append(f"[Lever] Selected '{auth_val}' for auth question")
                     except Exception:
                         pass
                 continue
@@ -247,12 +239,8 @@ async def _fill_lever_custom_questions(
             # Radio buttons
             radios = group.locator("input[type='radio']")
             if await radios.count() > 0:
-                q_lower = question_text.lower()
-                target = None
-                if "authorized" in q_lower:
-                    target = "yes" if profile_dict.get("authorized_to_work", True) else "no"
-                elif "sponsorship" in q_lower:
-                    target = "yes" if profile_dict.get("requires_sponsorship", False) else "no"
+                auth_val = determine_work_auth_answer(question_text, profile_dict)
+                target = auth_val.lower() if auth_val else None
 
                 if target:
                     radio_labels = group.locator("label")

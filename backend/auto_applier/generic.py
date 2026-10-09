@@ -8,7 +8,7 @@ Uses a heuristic label-scanning approach to fill any HTML form.
 import asyncio
 from playwright.async_api import Page
 
-from .question_answerer import answer_screening_question
+from .question_answerer import answer_screening_question, determine_work_auth_answer
 
 
 async def fill_generic_form(
@@ -193,9 +193,27 @@ async def _fill_generic_selects(page: Page, profile_dict: dict, log: list[str]) 
             sel = selects.nth(i)
             name = (await sel.get_attribute("name") or "").lower()
             sel_id = (await sel.get_attribute("id") or "").lower()
-            identifiers = f"{name} {sel_id}"
+            label_text = await _get_label_for_input(page, sel)
+            identifiers = f"{name} {sel_id} {label_text}".lower().strip()
 
-            # EEO/demographic fields
+            # 1. Work authorization / visa sponsorship
+            auth_val = determine_work_auth_answer(identifiers, profile_dict)
+            if auth_val:
+                try:
+                    await sel.select_option(label=auth_val)
+                    log.append(f"[Generic] Selected '{auth_val}' for auth/sponsorship: {identifiers[:40]}...")
+                    continue
+                except Exception:
+                    options = sel.locator("option")
+                    for j in range(await options.count()):
+                        opt_text = (await options.nth(j).inner_text()).strip()
+                        if auth_val.lower() == opt_text.lower():
+                            await sel.select_option(index=j)
+                            log.append(f"[Generic] Selected '{opt_text}' for {identifiers[:40]}...")
+                            break
+                    continue
+
+            # 2. EEO/demographic fields
             if "gender" in identifiers:
                 val = profile_dict.get("gender", "Decline to self-identify")
                 try:
@@ -242,14 +260,11 @@ async def _fill_generic_radios(page: Page, profile_dict: dict, log: list[str]) -
             if await legend.count() == 0:
                 continue
 
-            question = (await legend.first.inner_text()).strip().lower()
-            target = None
+            question = (await legend.first.inner_text()).strip()
+            auth_val = determine_work_auth_answer(question, profile_dict)
+            target = auth_val.lower() if auth_val else None
 
-            if any(kw in question for kw in ["authorized", "eligible", "legally"]):
-                target = "yes" if profile_dict.get("authorized_to_work", True) else "no"
-            elif "sponsorship" in question:
-                target = "yes" if profile_dict.get("requires_sponsorship", False) else "no"
-            elif "relocate" in question:
+            if not target and "relocate" in question.lower():
                 target = "yes"
 
             if target:

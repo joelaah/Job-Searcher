@@ -14,7 +14,11 @@ Greenhouse forms are typically a single page with:
 import asyncio
 from playwright.async_api import Page, Locator, TimeoutError as PlaywrightTimeout
 
-from .question_answerer import answer_screening_question, generate_tailored_cover_pitch
+from .question_answerer import (
+    answer_screening_question,
+    generate_tailored_cover_pitch,
+    determine_work_auth_answer,
+)
 
 
 async def fill_greenhouse_form(
@@ -242,27 +246,21 @@ async def _fill_select_field(
     log: list[str],
 ) -> None:
     """Fill a select/dropdown field based on question context."""
-    q_lower = question_text.lower()
-
-    # Work authorization
-    if any(kw in q_lower for kw in ["authorized", "eligible", "legally"]):
-        val = "Yes" if profile_dict.get("authorized_to_work", True) else "No"
+    auth_val = determine_work_auth_answer(question_text, profile_dict)
+    if auth_val:
         try:
-            await select.select_option(label=val)
-            log.append(f"[Greenhouse] Selected '{val}' for work auth")
+            await select.select_option(label=auth_val)
+            log.append(f"[Greenhouse] Selected '{auth_val}' for work auth/sponsorship")
+            return
         except Exception:
-            pass
-        return
-
-    # Sponsorship
-    if "sponsorship" in q_lower:
-        val = "Yes" if profile_dict.get("requires_sponsorship", False) else "No"
-        try:
-            await select.select_option(label=val)
-            log.append(f"[Greenhouse] Selected '{val}' for sponsorship")
-        except Exception:
-            pass
-        return
+            # Try lowercase or value match
+            options = select.locator("option")
+            for j in range(await options.count()):
+                opt_text = (await options.nth(j).inner_text()).strip()
+                if auth_val.lower() == opt_text.lower():
+                    await select.select_option(index=j)
+                    log.append(f"[Greenhouse] Selected option '{opt_text}'")
+                    return
 
     log.append(f"[Greenhouse] Skipped unknown select: '{question_text[:50]}...'")
 
@@ -276,11 +274,10 @@ async def _fill_radio_field(
     """Fill radio button fields based on question context."""
     q_lower = question_text.lower()
 
+    auth_val = determine_work_auth_answer(question_text, profile_dict)
     target_value = None
-    if any(kw in q_lower for kw in ["authorized", "eligible"]):
-        target_value = "yes" if profile_dict.get("authorized_to_work", True) else "no"
-    elif "sponsorship" in q_lower:
-        target_value = "yes" if profile_dict.get("requires_sponsorship", False) else "no"
+    if auth_val:
+        target_value = auth_val.lower()
     elif any(kw in q_lower for kw in ["relocate", "willing to"]):
         target_value = "yes"
 

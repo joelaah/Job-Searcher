@@ -141,7 +141,7 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection>
                           ),
                         ),
                         child: const Text(
-                          '768-D Vector Steering',
+                          'Latent Affinity Steering',
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
@@ -162,7 +162,7 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection>
                             .emeraldBlueGradient
                             .createShader(bounds),
                         child: Text(
-                          'Continuous Latent Vector Adaptation Engine',
+                          'Continuous Latent Affinity & Re-Ranking Engine',
                           style: TextStyle(
                             fontSize: isCompact ? 18 : 22,
                             fontWeight: FontWeight.w900,
@@ -173,7 +173,7 @@ class _AiLearningLoopSectionState extends State<AiLearningLoopSection>
                       ),
                       const SizedBox(height: 6),
                       const Text(
-                        'Interact with positions or adjust tactile steering sliders below to physically warp your 768-dimensional embedding in Supabase pgvector.',
+                        'Interact with positions or adjust tactical steering sliders below to dynamically re-weight semantic affinity and explore your latent constellation in real time (with optional Supabase vector sync).',
                         style: TextStyle(
                           fontSize: 13,
                           color: AppColors.textSecondary,

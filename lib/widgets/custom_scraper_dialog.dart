@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
@@ -46,42 +47,49 @@ class _CustomScraperDialogState extends State<CustomScraperDialog> {
     });
 
     try {
-      // 1. Try local FastAPI backend endpoint
-      const backendUrl = 'http://127.0.0.1:8000/api/scrape-url';
+      // 1. Try FastAPI backend endpoint (if not blocked by browser HTTPS Mixed Content)
+      const backendUrl = String.fromEnvironment(
+        'BACKEND_URL',
+        defaultValue: 'http://127.0.0.1:8000',
+      );
+      final isHttpsOrigin = kIsWeb && Uri.base.scheme == 'https';
+      final hasSecureBackend = backendUrl.startsWith('https://');
       bool backendSuccess = false;
 
-      try {
-        final resp = await http
-            .post(
-              Uri.parse(backendUrl),
-              headers: {'Content-Type': 'application/json'},
-              body: jsonEncode({'url': rawUrl, 'max_jobs': 40}),
-            )
-            .timeout(const Duration(seconds: 12));
+      if (!isHttpsOrigin || hasSecureBackend) {
+        try {
+          final resp = await http
+              .post(
+                Uri.parse('$backendUrl/api/scrape-url'),
+                headers: {'Content-Type': 'application/json'},
+                body: jsonEncode({'url': rawUrl, 'max_jobs': 40}),
+              )
+              .timeout(const Duration(seconds: 10));
 
-        if (resp.statusCode == 200) {
-          final data = jsonDecode(resp.body);
-          final rawList = data['jobs'] as List? ?? [];
-          final jobs = rawList
-              .map((j) => JobModel.fromScrapedJson(j as Map<String, dynamic>))
-              .toList();
+          if (resp.statusCode == 200) {
+            final data = jsonDecode(resp.body);
+            final rawList = data['jobs'] as List? ?? [];
+            final jobs = rawList
+                .map((j) => JobModel.fromScrapedJson(j as Map<String, dynamic>))
+                .toList();
 
-          setState(() {
-            _scrapedJobs = jobs;
-            _sourceStatus = 'Scraped via Python FastAPI Engine (${jobs.length} jobs found)';
-            _isLoading = false;
-          });
-          backendSuccess = true;
-        } else if (resp.statusCode == 429) {
-          setState(() {
-            _errorMessage = 'Rate limit reached (Too many requests). Please wait a moment before scraping again.';
-            _sourceStatus = 'Rate limit exceeded (HTTP 429)';
-            _isLoading = false;
-          });
-          return;
+            setState(() {
+              _scrapedJobs = jobs;
+              _sourceStatus = 'Scraped via Python FastAPI Engine (${jobs.length} jobs found)';
+              _isLoading = false;
+            });
+            backendSuccess = true;
+          } else if (resp.statusCode == 429) {
+            setState(() {
+              _errorMessage = 'Rate limit reached (Too many requests). Please wait a moment before scraping again.';
+              _sourceStatus = 'Rate limit exceeded (HTTP 429)';
+              _isLoading = false;
+            });
+            return;
+          }
+        } catch (_) {
+          // Backend not reachable or blocked; proceed to direct public ATS fallback
         }
-      } catch (_) {
-        // Backend not currently running on 8000; will use smart direct browser client fallback
       }
 
       if (!backendSuccess) {
@@ -152,6 +160,32 @@ class _CustomScraperDialogState extends State<CustomScraperDialog> {
             'job_url': item['absolute_url'] ?? url,
             'source': 'greenhouse',
             'tags': ['Greenhouse Live'],
+          });
+        }).toList();
+      }
+    }
+
+    // Direct Lever API
+    if (host.contains('lever.co') && segments.isNotEmpty) {
+      final board = segments.first;
+      final apiUrl = 'https://api.lever.co/v0/postings/$board?mode=json';
+      final resp = await http.get(Uri.parse(apiUrl)).timeout(const Duration(seconds: 12));
+      if (resp.statusCode == 200) {
+        final list = jsonDecode(resp.body) as List? ?? [];
+        return list.map((item) {
+          final cats = item['categories'] as Map<String, dynamic>? ?? {};
+          final loc = cats['location']?.toString() ?? 'Remote';
+          final workplaceType = item['workplaceType']?.toString().toLowerCase() ?? '';
+          final isRemote = loc.toLowerCase().contains('remote') || workplaceType == 'remote';
+          return JobModel.fromScrapedJson({
+            'title': item['text'] ?? 'Role',
+            'company': board.toUpperCase(),
+            'location': loc,
+            'is_remote': isRemote,
+            'description': item['descriptionPlain'] ?? item['description'] ?? '',
+            'job_url': item['hostedUrl'] ?? item['applyUrl'] ?? url,
+            'source': 'lever',
+            'tags': [cats['team']?.toString() ?? cats['department']?.toString() ?? 'Engineering'],
           });
         }).toList();
       }

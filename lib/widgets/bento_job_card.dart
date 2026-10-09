@@ -57,13 +57,13 @@ class _BentoJobCardState extends State<BentoJobCard> {
 
       await Clipboard.setData(
         ClipboardData(
-          text: 'User: ${match.usernameOrEmail}\nPass: ${match.password}\nResume: ${match.resumePath}',
+          text: 'User: ${match.usernameOrEmail}\nResume: ${match.resumePath}',
         ),
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('🔒 Vault: Copied login credentials for ${match.platform} to clipboard!'),
+            content: Text('🔒 Vault: Copied user identity for ${match.platform} (password kept safe in vault)'),
             backgroundColor: AppColors.cyanAccent,
           ),
         );

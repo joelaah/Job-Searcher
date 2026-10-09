@@ -29,6 +29,9 @@ class WorkAuth:
     authorized_to_work: bool = True
     requires_sponsorship: bool = False
     country: str = "United States"
+    authorized_in_us: bool = False
+    requires_us_sponsorship: bool = True
+    authorized_countries: list[str] = field(default_factory=lambda: ["India"])
 
 
 @dataclass
@@ -119,6 +122,10 @@ class CandidateProfile:
             "resume_path": self.resume_path,
             "authorized_to_work": self.work_auth.authorized_to_work,
             "requires_sponsorship": self.work_auth.requires_sponsorship,
+            "work_auth_country": self.work_auth.country,
+            "authorized_in_us": self.work_auth.authorized_in_us,
+            "requires_us_sponsorship": self.work_auth.requires_us_sponsorship,
+            "authorized_countries": self.work_auth.authorized_countries,
             "years_of_experience": self.preferences.years_of_experience,
             "min_salary": self.preferences.min_salary,
             "notice_period": self.preferences.notice_period,
@@ -178,7 +185,10 @@ def load_profile(path: str = PROFILE_PATH) -> CandidateProfile:
         work_auth=WorkAuth(
             authorized_to_work=bool(work_auth_data.get("authorized_to_work", True)),
             requires_sponsorship=bool(work_auth_data.get("requires_sponsorship", False)),
-            country=str(work_auth_data.get("country", "United States")),
+            country=str(work_auth_data.get("country", "India")),
+            authorized_in_us=bool(work_auth_data.get("authorized_in_us", work_auth_data.get("country", "") == "United States")),
+            requires_us_sponsorship=bool(work_auth_data.get("requires_us_sponsorship", work_auth_data.get("country", "") != "United States")),
+            authorized_countries=list(work_auth_data.get("authorized_countries", [work_auth_data.get("country", "India")])),
         ),
         eeo=EEO(
             gender=str(eeo_data.get("gender", "Decline to self-identify")),
@@ -236,6 +246,9 @@ def save_profile(profile: CandidateProfile, path: str = PROFILE_PATH) -> None:
             "authorized_to_work": profile.work_auth.authorized_to_work,
             "requires_sponsorship": profile.work_auth.requires_sponsorship,
             "country": profile.work_auth.country,
+            "authorized_in_us": profile.work_auth.authorized_in_us,
+            "requires_us_sponsorship": profile.work_auth.requires_us_sponsorship,
+            "authorized_countries": profile.work_auth.authorized_countries,
         },
         "eeo": {
             "gender": profile.eeo.gender,
