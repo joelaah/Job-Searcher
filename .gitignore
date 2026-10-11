@@ -1,0 +1,112 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code
+.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Security & Secrets (MANDATORY)
+.env
+*.env
+*.env.*
+!.env.example
+!*.env.example
+backend/.env
+*.pem
+*.key
+*.secret
+*.credentials
+*.csv
+SESSION_HANDOVER_CONTEXT.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Temporary & Output caches
+.tempmediaStorage/
+*.webp
+*.log
+
+# Personal testing scripts & local test outputs (NEVER in git or web app)
+backend/search_*.py
+backend/test_*.py
+!backend/test_server.py
+backend/joel_*.py
+backend/*_matches.json
+backend/joel_*.json
+backend/discovered_internships.json
+backend/evaluated_roles.json
+backend/find_internships.py
+backend/score_curated.py
+*_matches.json
+joel_*.json
+*.pdf
+
+# Auto-Apply Engine (personal data & local output)
+backend/candidate_profile.yaml
+backend/apply_screenshots/
+
+# Graphify knowledge graph outputs
+graphify-out/
+.graphify*
+
+# Temporary recording automation & screen captures
+record_*.py
+produce_*.py
+temp_recording/
+live_*.png
+
+# Multi-agent coordination runtime & external directories
+.agents/teamwork/
+alignerr_python_course/
+candidate_profile.yaml
+**/candidate_profile.yaml
+!candidate_profile.example.yaml
+!**/candidate_profile.example.yaml
+
+

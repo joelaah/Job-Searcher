@@ -1,0 +1,32 @@
+# ──────────────────────────────────────────────────────────────
+# JOB SeArCh — Python Job Scraping & RAG Pipeline
+# ──────────────────────────────────────────────────────────────
+# Core
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+
+# Supabase Python client (includes pgvector support)
+supabase>=2.4.0
+
+# AI Engine: Groq (free LLM) and FastEmbed (local 768-dim embeddings)
+groq>=1.7.0
+fastembed>=0.8.0
+
+# Google Gemini (optional fallback)
+google-genai>=1.0.0
+
+# Utilities
+python-dotenv>=1.0.0
+
+# Web API & Rate Limiting
+fastapi>=0.110.0
+uvicorn>=0.28.0
+slowapi>=0.1.10
+
+# Anti-Bot & Stealth Web Scraping Fallback
+scrapling[fetchers]>=0.4.15
+
+# Auto-Apply Engine (Playwright Browser Automation)
+playwright>=1.44.0
+pyyaml>=6.0
+
