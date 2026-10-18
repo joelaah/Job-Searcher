@@ -2,8 +2,8 @@ name: Supabase Keep-Alive Pulse
 
 on:
   schedule:
-    # Runs every 2 days at 06:00 UTC (well within Supabase's 7-day inactivity pause window)
-    - cron: '0 6 */2 * *'
+    # Runs daily at 06:00 UTC (well within Supabase's 7-day inactivity pause window)
+    - cron: '0 6 * * *'
   workflow_dispatch: # Allows manual trigger anytime from GitHub Actions tab
 
 jobs:
@@ -14,7 +14,7 @@ jobs:
       # ────────────────────────────────────────────────────────
       # 1. Job Searcher Supabase Keep-Alive
       # ────────────────────────────────────────────────────────
-      - name: Ping Job Searcher Supabase (PostgreSQL & Auth)
+      - name: Ping Job Searcher Supabase (PostgreSQL Write Pulse & Auth)
         env:
           JOB_SEARCH_URL: ${{ secrets.JOB_SEARCH_SUPABASE_URL }}
           JOB_SEARCH_KEY: ${{ secrets.JOB_SEARCH_SUPABASE_ANON_KEY }}
@@ -27,29 +27,51 @@ jobs:
             exit 1
           fi
 
-          # 1. PostgREST Active DB Query (select from jobs table to reset Postgres pause counter)
-          echo "1. Querying PostgreSQL Database via PostgREST (/rest/v1/jobs)..."
+          # 1. Guaranteed PostgreSQL Write Transaction via RPC (Generates real WAL & resets pause counter)
+          echo "1. Triggering PostgreSQL Write Pulse via RPC (/rest/v1/rpc/ping_keep_alive)..."
+          RPC_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${JOB_SEARCH_URL}/rest/v1/rpc/ping_keep_alive" \
+            -H "apikey: ${JOB_SEARCH_KEY}" \
+            -H "Authorization: Bearer ${JOB_SEARCH_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{"caller_name": "github_actions_keep_alive"}' || echo -e "\nFAILED")
+          HTTP_STATUS_RPC=$(echo "$RPC_RESPONSE" | tail -n1)
+          RPC_BODY=$(echo "$RPC_RESPONSE" | sed '$d')
+          echo "   PostgreSQL RPC Pulse Status: ${HTTP_STATUS_RPC}"
+          echo "   PostgreSQL RPC Pulse Output: ${RPC_BODY}"
+
+          # 2. Direct Heartbeat Table Upsert (Fallback / secondary active mutation)
+          echo "2. Upserting Heartbeat Record to /rest/v1/_keep_alive..."
+          HTTP_STATUS_UPSERT=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${JOB_SEARCH_URL}/rest/v1/_keep_alive?on_conflict=service_name" \
+            -H "apikey: ${JOB_SEARCH_KEY}" \
+            -H "Authorization: Bearer ${JOB_SEARCH_KEY}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: resolution=merge-duplicates" \
+            -d '{"service_name": "job-searcher", "last_ping": "now()"}' || echo "FAILED")
+          echo "   Heartbeat Upsert Status: ${HTTP_STATUS_UPSERT}"
+
+          # 3. PostgREST Active DB Query (/rest/v1/jobs)
+          echo "3. Querying PostgreSQL Database via PostgREST (/rest/v1/jobs)..."
           HTTP_STATUS_DB=$(curl -s -o /dev/null -w "%{http_code}" -X GET "${JOB_SEARCH_URL}/rest/v1/jobs?select=id&limit=1" \
             -H "apikey: ${JOB_SEARCH_KEY}" \
             -H "Authorization: Bearer ${JOB_SEARCH_KEY}" || echo "FAILED")
           echo "   PostgreSQL Query Status: ${HTTP_STATUS_DB}"
 
-          # 2. Auth Service Settings Query
-          echo "2. Querying Auth Service Settings (/auth/v1/settings)..."
+          # 4. Auth Service Settings Query
+          echo "4. Querying Auth Service Settings (/auth/v1/settings)..."
           HTTP_STATUS_AUTH=$(curl -s -o /dev/null -w "%{http_code}" -X GET "${JOB_SEARCH_URL}/auth/v1/settings" \
             -H "apikey: ${JOB_SEARCH_KEY}" || echo "FAILED")
           echo "   Auth Service Status: ${HTTP_STATUS_AUTH}"
 
-          # 3. Auth Health Query
-          echo "3. Querying Auth Health (/auth/v1/health)..."
+          # 5. Auth Health Query
+          echo "5. Querying Auth Health (/auth/v1/health)..."
           HTTP_STATUS_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" -X GET "${JOB_SEARCH_URL}/auth/v1/health" \
             -H "apikey: ${JOB_SEARCH_KEY}" || echo "FAILED")
           echo "   Auth Health Status: ${HTTP_STATUS_HEALTH}"
 
-          if [ "$HTTP_STATUS_DB" = "200" ] || [ "$HTTP_STATUS_AUTH" = "200" ]; then
+          if [ "$HTTP_STATUS_RPC" = "200" ] || [ "$HTTP_STATUS_UPSERT" = "201" ] || [ "$HTTP_STATUS_DB" = "200" ]; then
             echo "✅ Job Searcher Supabase is ACTIVE and KEEP-ALIVE pulse succeeded."
           else
-            echo "⚠️ Warning: Non-200 responses received (DB: ${HTTP_STATUS_DB}, Auth: ${HTTP_STATUS_AUTH})"
+            echo "⚠️ Warning: Non-success responses received (RPC: ${HTTP_STATUS_RPC}, DB: ${HTTP_STATUS_DB}, Auth: ${HTTP_STATUS_AUTH})"
           fi
 
       # ────────────────────────────────────────────────────────
@@ -68,27 +90,37 @@ jobs:
             exit 1
           fi
 
-          # 1. PostgREST Active DB Query (select from profiles table to reset Postgres pause counter)
-          echo "1. Querying PostgreSQL Database via PostgREST (/rest/v1/profiles)..."
+          # 1. Attempt RPC Write Pulse if available
+          echo "1. Attempting PostgreSQL Write Pulse via RPC (/rest/v1/rpc/ping_keep_alive)..."
+          RPC_FIT_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${FITNESS_URL}/rest/v1/rpc/ping_keep_alive" \
+            -H "apikey: ${FITNESS_KEY}" \
+            -H "Authorization: Bearer ${FITNESS_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{"caller_name": "github_actions_fitness"}' || echo -e "\nFAILED")
+          HTTP_STATUS_FIT_RPC=$(echo "$RPC_FIT_RESPONSE" | tail -n1)
+          echo "   Fitness RPC Pulse Status: ${HTTP_STATUS_FIT_RPC}"
+
+          # 2. PostgREST Active DB Query (/rest/v1/profiles)
+          echo "2. Querying PostgreSQL Database via PostgREST (/rest/v1/profiles)..."
           HTTP_STATUS_DB=$(curl -s -o /dev/null -w "%{http_code}" -X GET "${FITNESS_URL}/rest/v1/profiles?select=id&limit=1" \
             -H "apikey: ${FITNESS_KEY}" \
             -H "Authorization: Bearer ${FITNESS_KEY}" || echo "FAILED")
           echo "   PostgreSQL Query Status: ${HTTP_STATUS_DB}"
 
-          # 2. Auth Service Settings Query
-          echo "2. Querying Auth Service Settings (/auth/v1/settings)..."
+          # 3. Auth Service Settings Query
+          echo "3. Querying Auth Service Settings (/auth/v1/settings)..."
           HTTP_STATUS_AUTH=$(curl -s -o /dev/null -w "%{http_code}" -X GET "${FITNESS_URL}/auth/v1/settings" \
             -H "apikey: ${FITNESS_KEY}" || echo "FAILED")
           echo "   Auth Service Status: ${HTTP_STATUS_AUTH}"
 
-          # 3. Auth Health Query
-          echo "3. Querying Auth Health (/auth/v1/health)..."
+          # 4. Auth Health Query
+          echo "4. Querying Auth Health (/auth/v1/health)..."
           HTTP_STATUS_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" -X GET "${FITNESS_URL}/auth/v1/health" \
             -H "apikey: ${FITNESS_KEY}" || echo "FAILED")
           echo "   Auth Health Status: ${HTTP_STATUS_HEALTH}"
 
-          if [ "$HTTP_STATUS_DB" = "200" ] || [ "$HTTP_STATUS_AUTH" = "200" ]; then
+          if [ "$HTTP_STATUS_FIT_RPC" = "200" ] || [ "$HTTP_STATUS_DB" = "200" ] || [ "$HTTP_STATUS_AUTH" = "200" ]; then
             echo "✅ Fitness App Supabase is ACTIVE and KEEP-ALIVE pulse succeeded."
           else
-            echo "⚠️ Warning: Non-200 responses received (DB: ${HTTP_STATUS_DB}, Auth: ${HTTP_STATUS_AUTH})"
+            echo "⚠️ Warning: Non-200 responses received (RPC: ${HTTP_STATUS_FIT_RPC}, DB: ${HTTP_STATUS_DB}, Auth: ${HTTP_STATUS_AUTH})"
           fi
