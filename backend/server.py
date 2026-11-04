@@ -232,8 +232,117 @@ def profile_status(request: Request):
         }
 
 
+@app.get("/api/email/status")
+@limiter.limit("30/minute")
+def email_status(request: Request):
+    """Check configuration and health of email job copilot."""
+    try:
+        from email_copilot import EmailReader, NotificationManager, EmailCopilot
+        reader = EmailReader()
+        notifs = NotificationManager.load_notifications()
+        jobs = EmailCopilot.load_actionable_jobs()
+        return {
+            "configured": reader.is_configured(),
+            "host": reader.host,
+            "user": reader.user,
+            "unread_notifications": len([n for n in notifs if not n.get("read", False)]),
+            "total_notifications": len(notifs),
+            "actionable_jobs": len(jobs),
+        }
+    except Exception as e:
+        return {"configured": False, "error": str(e)}
+
+
+class EmailScanRequest(BaseModel):
+    limit: Optional[int] = 15
+    unread_only: Optional[bool] = True
+    simulate: Optional[bool] = False
+    auto_apply: Optional[bool] = False
+    fit_threshold: Optional[int] = 75
+
+
+@app.post("/api/email/scan")
+@limiter.limit("10/minute")
+def email_scan(request: Request, payload: EmailScanRequest):
+    """Scan inbox or run simulation to process emails, notify on recruiters, and extract jobs."""
+    try:
+        from email_copilot import EmailCopilot, EmailReader
+        reader = EmailReader()
+        copilot = EmailCopilot(reader=reader)
+
+        if payload.simulate or not reader.is_configured():
+            results = copilot.run_simulation(
+                auto_apply_enabled=payload.auto_apply,
+                fit_threshold=payload.fit_threshold,
+            )
+            mode = "simulation"
+        else:
+            results = copilot.scan_inbox(
+                limit=payload.limit or 15,
+                unread_only=payload.unread_only if payload.unread_only is not None else True,
+                auto_apply_enabled=payload.auto_apply,
+                fit_threshold=payload.fit_threshold,
+            )
+            mode = "live"
+
+        return {"mode": mode, "results": results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Email scan failed: {str(e)}")
+
+
+@app.get("/api/email/notifications")
+@limiter.limit("60/minute")
+def email_notifications(request: Request):
+    """Retrieve notifications triggered by recruiter outreach, interview invites, and high-fit jobs."""
+    try:
+        from email_copilot import NotificationManager
+        return {"notifications": NotificationManager.load_notifications()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/email/jobs")
+@limiter.limit("60/minute")
+def email_jobs(request: Request):
+    """Retrieve actionable jobs extracted from emails."""
+    try:
+        from email_copilot import EmailCopilot
+        return {"jobs": EmailCopilot.load_actionable_jobs()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class EmailApplyRequest(BaseModel):
+    job_url: str
+    job_title: Optional[str] = ""
+    job_company: Optional[str] = ""
+    job_description: Optional[str] = ""
+
+
+@app.post("/api/email/apply")
+@limiter.limit("10/minute")
+def email_apply(request: Request, payload: EmailApplyRequest):
+    """Trigger auto-apply directly for a high-fit job extracted from email."""
+    try:
+        from candidate_profile import load_profile
+        from auto_applier.engine import run_auto_apply
+        profile = load_profile()
+        result = run_auto_apply(
+            job_url=payload.job_url,
+            job_title=payload.job_title or "",
+            job_company=payload.job_company or "",
+            job_description=payload.job_description or "",
+            profile=profile,
+            headless=True,
+        )
+        return {"result": result.to_dict()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Auto-apply execution failed: {str(e)}")
+
+
 if __name__ == "__main__":
     host = os.getenv("HOST", "127.0.0.1")
     port = int(os.getenv("PORT", "8000"))
     uvicorn.run("server:app", host=host, port=port, reload=True)
+
 

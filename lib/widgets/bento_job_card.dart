@@ -8,7 +8,7 @@ import '../bloc/job_state.dart';
 import '../models/job_model.dart';
 import '../models/local_credential.dart';
 import '../theme/app_colors.dart';
-import 'job_detail_dialog.dart';
+import 'diagnostic_dossier_modal.dart';
 
 class BentoJobCard extends StatefulWidget {
   final JobModel job;
@@ -29,13 +29,7 @@ class _BentoJobCardState extends State<BentoJobCard> {
   }
 
   void _openDetailDialog() {
-    showDialog(
-      context: context,
-      builder: (ctx) => BlocProvider.value(
-        value: context.read<JobBloc>(),
-        child: JobDetailDialog(job: widget.job),
-      ),
-    );
+    DiagnosticDossierModal.show(context, widget.job);
   }
 
   Future<void> _applyJob(JobModel job) async {

@@ -83,9 +83,46 @@ backend/discovered_internships.json
 backend/evaluated_roles.json
 backend/find_internships.py
 backend/score_curated.py
+backend/scan_remote_roles.py
 *_matches.json
 joel_*.json
 *.pdf
+
+# Interview Preparation, LeetCode Roadmaps & Study Plans
+INTERVIEW_PREP_PLAN.*
+30_DAY_LEETCODE_PYTHON_ROADMAP.md
+*INTERVIEW_PREP*.md
+*LEETCODE*.md
+STUDY_NOTES*
+
+# Gmail & Email Copilot (Checker scripts, notifications, logs & credentials)
+backend/email_copilot.py
+backend/test_email_copilot.py
+backend/modal_copilot.py
+backend/email_*.json
+backend/toast.ps1
+.github/workflows/email_copilot.yml
+*gmail*
+*email_copilot*
+token.json
+token*.json
+credentials.json
+client_secret*.json
+
+# Personal Job Analyses, Resumes, and Generated Documents
+*.docx
+generate_*.js
+
+# Personal Branding, Camo Graphics & Visual Media
+joel_camo_*
+
+# Node & Package Managers
+node_modules/
+.pytest_cache/
+
+# Adversarial & Compliance Test Harnesses
+test_compliance_*.py
+test_harness_*.py
 
 # Auto-Apply Engine (personal data & local output)
 backend/candidate_profile.yaml
@@ -103,10 +140,9 @@ live_*.png
 
 # Multi-agent coordination runtime & external directories
 .agents/teamwork/
+teamwork_job_search/
 alignerr_python_course/
 candidate_profile.yaml
 **/candidate_profile.yaml
 !candidate_profile.example.yaml
 !**/candidate_profile.example.yaml
-
-

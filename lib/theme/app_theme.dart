@@ -4,7 +4,7 @@ import 'app_colors.dart';
 
 class AppTheme {
   static ThemeData get darkTheme {
-    final baseTextTheme = GoogleFonts.plusJakartaSansTextTheme(
+    final baseTextTheme = GoogleFonts.interTextTheme(
       ThemeData(brightness: Brightness.dark).textTheme,
     );
 
@@ -14,12 +14,18 @@ class AppTheme {
       primaryColor: AppColors.primary,
       colorScheme: const ColorScheme.dark(
         primary: AppColors.primary,
+        primaryContainer: AppColors.primaryContainer,
+        onPrimaryContainer: AppColors.onPrimaryContainer,
         secondary: AppColors.secondary,
         surface: AppColors.surface,
+        error: AppColors.error,
+        onSurface: AppColors.onSurface,
+        onPrimary: AppColors.onPrimary,
+        onSecondary: AppColors.onSecondary,
       ),
       textTheme: baseTextTheme.apply(
-        bodyColor: AppColors.textPrimary,
-        displayColor: AppColors.textPrimary,
+        bodyColor: AppColors.onSurface,
+        displayColor: AppColors.onSurface,
       ),
       cardTheme: CardThemeData(
         color: AppColors.surfaceCard,
@@ -31,7 +37,7 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: AppColors.surfaceContainerLow,
         hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 14),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
@@ -49,14 +55,14 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
+          backgroundColor: AppColors.primaryContainer,
+          foregroundColor: AppColors.onPrimaryContainer,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: const TextStyle(
+          textStyle: GoogleFonts.spaceGrotesk(
             fontWeight: FontWeight.w600,
             fontSize: 14,
           ),
@@ -64,21 +70,24 @@ class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.textPrimary,
+          foregroundColor: AppColors.onSurface,
           side: const BorderSide(color: AppColors.surfaceBorder),
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: const TextStyle(
+          textStyle: GoogleFonts.jetBrainsMono(
             fontWeight: FontWeight.w600,
-            fontSize: 14,
+            fontSize: 13,
           ),
         ),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: AppColors.surfaceElevated,
-        labelStyle: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+        backgroundColor: AppColors.surfaceContainerHigh,
+        labelStyle: GoogleFonts.jetBrainsMono(
+          fontSize: 11,
+          color: AppColors.onSurfaceVariant,
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),

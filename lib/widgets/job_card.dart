@@ -4,7 +4,7 @@ import '../bloc/job_bloc.dart';
 import '../bloc/job_event.dart';
 import '../models/job_model.dart';
 import '../theme/app_colors.dart';
-import 'job_detail_dialog.dart';
+import 'diagnostic_dossier_modal.dart';
 
 class JobCard extends StatefulWidget {
   final JobModel job;
@@ -25,13 +25,7 @@ class _JobCardState extends State<JobCard> {
   }
 
   void _openDetailDialog() {
-    showDialog(
-      context: context,
-      builder: (ctx) => BlocProvider.value(
-        value: context.read<JobBloc>(),
-        child: JobDetailDialog(job: widget.job),
-      ),
-    );
+    DiagnosticDossierModal.show(context, widget.job);
   }
 
   @override

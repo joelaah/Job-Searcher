@@ -61,6 +61,23 @@ class Config:
     GROQ_MODEL: str = "qwen/qwen3.8-27b"
     LLM_MODEL: str = "gemini-2.0-flash"
 
+    # Email Reader & Job Copilot
+    IMAP_HOST: str = os.getenv("IMAP_HOST", "imap.gmail.com")
+    IMAP_PORT: int = int(os.getenv("IMAP_PORT", "993"))
+    IMAP_USER: str = os.getenv("IMAP_USER", "")
+    IMAP_PASSWORD: str = os.getenv("IMAP_PASSWORD", "")
+    IMAP_USE_SSL: bool = os.getenv("IMAP_USE_SSL", "true").lower() in ("true", "1", "yes")
+    EMAIL_CHECK_INTERVAL_SECONDS: int = int(os.getenv("EMAIL_CHECK_INTERVAL_SECONDS", "300"))
+    AUTO_APPLY_FIT_THRESHOLD: int = int(os.getenv("AUTO_APPLY_FIT_THRESHOLD", "75"))
+    AUTO_APPLY_ENABLED: bool = os.getenv("AUTO_APPLY_ENABLED", "false").lower() in ("true", "1", "yes")
+    NOTIFY_ON_RECRUITER: bool = os.getenv("NOTIFY_ON_RECRUITER", "true").lower() in ("true", "1", "yes")
+
+    # Mobile Push Notification Settings (ntfy, Telegram, Discord)
+    NTFY_TOPIC: str = os.getenv("NTFY_TOPIC", "")
+    TELEGRAM_BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
+    TELEGRAM_CHAT_ID: str = os.getenv("TELEGRAM_CHAT_ID", "")
+    DISCORD_WEBHOOK_URL: str = os.getenv("DISCORD_WEBHOOK_URL", "")
+
     @classmethod
     def validate(cls) -> list[str]:
         """Returns a list of missing required config keys."""

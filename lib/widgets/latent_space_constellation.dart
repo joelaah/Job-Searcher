@@ -1,10 +1,8 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../bloc/job_bloc.dart';
 import '../models/job_model.dart';
 import '../theme/app_colors.dart';
-import 'job_detail_dialog.dart';
+import 'diagnostic_dossier_modal.dart';
 
 class LatentSpaceConstellation extends StatefulWidget {
   final List<JobModel> jobs;
@@ -41,13 +39,7 @@ class _LatentSpaceConstellationState extends State<LatentSpaceConstellation> wit
   }
 
   void _openJobDetail(JobModel job) {
-    showDialog(
-      context: context,
-      builder: (ctx) => BlocProvider.value(
-        value: context.read<JobBloc>(),
-        child: JobDetailDialog(job: job),
-      ),
-    );
+    DiagnosticDossierModal.show(context, job);
   }
 
   @override
