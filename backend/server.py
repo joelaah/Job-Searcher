@@ -240,9 +240,15 @@ def api_score_jobs(request: Request, payload: ScoreJobsRequest):
         for item in scored
     ]
 
+    scoring_mode = (
+        "llm_plus_lightweight_similarity"
+        if embeddings._is_low_ram_cloud() and embeddings._get_gemini_client() is None
+        else "llm_plus_embeddings"
+    )
+
     return {
         "results": results,
-        "scoring_mode": "llm_plus_embeddings",
+        "scoring_mode": scoring_mode,
     }
 
 

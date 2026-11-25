@@ -536,6 +536,23 @@ work_authorization:
         self.assertEqual(result["cosine_similarity"], 0.0)
         self.assertEqual(result["match_score"], 0)
 
+    def test_embeddings_low_ram_cloud_avoids_fastembed(self):
+        """Verify RENDER=true avoids loading ONNX FastEmbed and generates 768-d vectors."""
+        import embeddings as emb_mod
+
+        with patch.dict(os.environ, {"RENDER": "true"}, clear=False), \
+             patch.object(emb_mod, "_get_gemini_client", return_value=None), \
+             patch.object(emb_mod, "_get_fastembed", side_effect=AssertionError("Must not load FastEmbed on Render")):
+            v1 = emb_mod.embed_resume("Python FastAPI RAG Docker pytest")
+            v2 = emb_mod.generate_embeddings_batch(["Python FastAPI Engineer Docker", "Chef Pastry Baker"])
+
+        self.assertEqual(len(v1), 768)
+        self.assertEqual(len(v2), 2)
+        self.assertEqual(len(v2[0]), 768)
+        dot_match = sum(a * b for a, b in zip(v1, v2[0]))
+        dot_miss = sum(a * b for a, b in zip(v1, v2[1]))
+        self.assertGreater(dot_match, dot_miss)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -6,6 +6,10 @@ Uses Google Gemini's free-tier text-embedding-004 model to generate
 Cost: $0 — Gemini embedding API is free up to 1,500 requests/minute.
 """
 
+import hashlib
+import math
+import os
+import re
 import time
 from google import genai
 from config import Config
@@ -17,6 +21,36 @@ from config import Config
 
 _fastembed_model = None
 _gemini_client = None
+
+
+def _is_low_ram_cloud() -> bool:
+    """Detect 512MB cloud tiers (e.g., Render free plan) where ONNX FastEmbed can OOM."""
+    return (
+        os.getenv("RENDER", "").strip().lower() == "true"
+        or os.getenv("DISABLE_LOCAL_FASTEMBED", "").strip().lower() in ("1", "true", "yes")
+    )
+
+
+def _compute_lightweight_vector(text: str, dims: int = 768) -> list[float]:
+    """Deterministic sub-millisecond 768-dim hashed token+trigram vector (<1 MB RAM)."""
+    vec = [0.0] * dims
+    if not text or not text.strip():
+        return vec
+    tokens = re.findall(r"[a-z0-9\+\#\.]{2,}", text.lower())
+    features: list[str] = list(tokens)
+    for tok in tokens:
+        if len(tok) >= 4:
+            for i in range(len(tok) - 2):
+                features.append(tok[i : i + 3])
+    for feat in features:
+        digest = hashlib.md5(feat.encode("utf-8")).digest()
+        idx = int.from_bytes(digest[:4], "little") % dims
+        sign = 1.0 if (digest[4] & 1) == 0 else -1.0
+        vec[idx] += sign
+    norm = math.sqrt(sum(v * v for v in vec))
+    if norm > 0:
+        vec = [v / norm for v in vec]
+    return vec
 
 
 def _get_fastembed():
@@ -61,6 +95,10 @@ def generate_embedding(text: str) -> list[float]:
         except Exception as e:
             print(f"[Embeddings] Gemini embedding failed, falling back to local FastEmbed: {e}")
 
+    # Avoid loading ~400MB ONNX FastEmbed on 512MB cloud free tiers unless explicitly enabled
+    if _is_low_ram_cloud():
+        return _compute_lightweight_vector(text, Config.EMBEDDING_DIMENSIONS)
+
     # Primary: FastEmbed local ONNX model (768 dims)
     model = _get_fastembed()
     embeddings = list(model.embed([text[:4000]]))
@@ -93,9 +131,16 @@ def generate_embeddings_batch(
     all_embeddings: list[list[float]] = []
     total = len(texts)
 
-    # Use local FastEmbed if Gemini is not configured
+    # Use lightweight vectors on 512MB cloud tiers or local FastEmbed when Gemini is unset
     gemini = _get_gemini_client()
     if gemini is None:
+        if _is_low_ram_cloud():
+            all_embeddings = [
+                _compute_lightweight_vector(t or "", Config.EMBEDDING_DIMENSIONS)
+                for t in texts
+            ]
+            print(f"  [Embeddings] ✓ Generated {len(all_embeddings)} lightweight vectors (Low-RAM Cloud)")
+            return all_embeddings
         model = _get_fastembed()
         cleaned_texts = [(t[:4000] if t else " ") for t in texts]
         embeddings = list(model.embed(cleaned_texts, batch_size=batch_size))
@@ -128,6 +173,15 @@ def generate_embeddings_batch(
                 all_embeddings.append(list(result.embeddings[0].values))
 
             except Exception as e:
+                if _is_low_ram_cloud():
+                    print(
+                        f"    [Embeddings] Gemini batch embedding failed ({e}), "
+                        "falling back to lightweight vectors (Low-RAM Cloud)..."
+                    )
+                    return [
+                        _compute_lightweight_vector(t or "", Config.EMBEDDING_DIMENSIONS)
+                        for t in texts
+                    ]
                 print(
                     f"    [Embeddings] Gemini batch embedding failed ({e}), "
                     "falling back to local FastEmbed for batch..."
