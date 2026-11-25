@@ -114,7 +114,7 @@ Return ONLY valid JSON (no markdown, no code fences) with these exact keys:
     try:
         text = _call_llm(prompt)
         if not text:
-            return _fallback_score(resume_text, job_title, job_company, job_description, cosine_similarity)
+            return _fallback_score(cosine_similarity)
 
         # Clean potential markdown code fences
         if text.startswith("```"):

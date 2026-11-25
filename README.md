@@ -161,35 +161,24 @@ curl -X POST "http://localhost:8000/api/scrape-url" \
 
 Both the frontend client and the Python backend feature automated test suites verifying data models, state transitions, parsing logic, and API endpoints.
 
-### Run Flutter Test Suite (10/10 Passing)
+### Run Flutter Test Suite (27/27 Passing)
 ```bash
-# Runs JobModel, LocalCredential, and Desktop smoke tests
+# Runs JobModel, LocalCredential, BLoC, and widget tests
 flutter test
 ```
 ```
-00:00 +0: loading D:/job searcher/test/job_model_test.dart
-00:00 +1: JobModel Unit Tests JobModel.formattedSalary formats ranges correctly
-00:00 +2: JobModel Unit Tests JobModel.formattedSalary returns "Competitive" when salaries are zero
-00:00 +3: JobModel Unit Tests JobModel.copyWith correctly updates interaction flags
-00:00 +4: JobModel Unit Tests JobModel.fromScrapedJson parses live scraper payload accurately
-00:00 +5: JobModel Unit Tests JobModel.fromScrapedJson provides graceful defaults for empty payload
-00:05 +6: LocalCredential Unit Tests LocalCredential initializes correctly with provided values
-00:05 +7: LocalCredential Unit Tests LocalCredential.fromMap handles standard CSV headers
-00:05 +8: LocalCredential Unit Tests LocalCredential.fromMap handles alias column keys gracefully
-00:05 +9: LocalCredential Unit Tests LocalCredential.copyWith updates specific properties without mutation
-00:09 +10: JOB SeArCh desktop smoke test
-00:13 +10: All tests passed!
+00:00 +0: loading test/job_model_test.dart
+...
+00:13 +27: All tests passed!
 ```
 
-### Run Python Backend Test Suite (5/5 Passing)
+### Run Python Backend Test Suite (15/15 Passing)
 ```bash
 cd backend
-python -m unittest test_server.py
+python -m unittest test_server.py -v
 ```
 ```
-.....
-----------------------------------------------------------------------
-Ran 5 tests in 0.139s
+Ran 15 tests in 0.900s
 
 OK
 ```

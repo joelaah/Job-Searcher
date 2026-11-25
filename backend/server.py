@@ -238,6 +238,9 @@ def email_status(request: Request):
     """Check configuration and health of email job copilot."""
     try:
         from email_copilot import EmailReader, NotificationManager, EmailCopilot
+    except ImportError:
+        return {"configured": False, "error": "Email copilot module not installed"}
+    try:
         reader = EmailReader()
         notifs = NotificationManager.load_notifications()
         jobs = EmailCopilot.load_actionable_jobs()
@@ -267,6 +270,9 @@ def email_scan(request: Request, payload: EmailScanRequest):
     """Scan inbox or run simulation to process emails, notify on recruiters, and extract jobs."""
     try:
         from email_copilot import EmailCopilot, EmailReader
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Email copilot module not configured")
+    try:
         reader = EmailReader()
         copilot = EmailCopilot(reader=reader)
 
@@ -296,6 +302,9 @@ def email_notifications(request: Request):
     """Retrieve notifications triggered by recruiter outreach, interview invites, and high-fit jobs."""
     try:
         from email_copilot import NotificationManager
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Email copilot module not configured")
+    try:
         return {"notifications": NotificationManager.load_notifications()}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -307,6 +316,9 @@ def email_jobs(request: Request):
     """Retrieve actionable jobs extracted from emails."""
     try:
         from email_copilot import EmailCopilot
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Email copilot module not configured")
+    try:
         return {"jobs": EmailCopilot.load_actionable_jobs()}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
