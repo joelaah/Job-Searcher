@@ -12,9 +12,21 @@ import 'job_state.dart';
 
 class JobBloc extends Bloc<JobEvent, JobState> {
   final JobPersistenceService _persistence;
+  final http.Client _httpClient;
+  final bool _ownsHttpClient;
+  final String? _backendUrlOverride;
+  final bool? _isHttpsWebOriginOverride;
 
-  JobBloc({required JobPersistenceService persistence})
-      : _persistence = persistence,
+  JobBloc({
+    required JobPersistenceService persistence,
+    http.Client? httpClient,
+    String? backendUrlOverride,
+    bool? isHttpsWebOriginOverride,
+  })  : _persistence = persistence,
+        _httpClient = httpClient ?? http.Client(),
+        _ownsHttpClient = httpClient == null,
+        _backendUrlOverride = backendUrlOverride,
+        _isHttpsWebOriginOverride = isHttpsWebOriginOverride,
         super(_initialState()) {
     on<LoadPersistedState>(_onLoadPersistedState);
     on<SearchQueryChanged>(_onSearchQueryChanged);
@@ -101,73 +113,286 @@ class JobBloc extends Bloc<JobEvent, JobState> {
     emit(state.copyWith(targetRoles: updated));
   }
 
-  void _onAddScrapedJobs(AddScrapedJobs event, Emitter<JobState> emit) {
+  Future<void> _onAddScrapedJobs(
+    AddScrapedJobs event,
+    Emitter<JobState> emit,
+  ) async {
     if (event.jobs.isEmpty) return;
 
     final existingUrls = state.allJobs.map((j) => j.applicationUrl).toSet();
-    final List<JobModel> newScoredJobs = [];
-
-    final userSkills = state.userProfile.primarySkills.map((s) => s.toLowerCase()).toSet();
-    final userRoles = state.targetRoles.map((r) => r.toLowerCase()).toList();
-
+    final seenNewUrls = <String>{};
+    final candidateJobs = <JobModel>[];
     for (final job in event.jobs) {
       if (existingUrls.contains(job.applicationUrl)) continue;
-
-      // Dynamic skill & role fit calculation against user profile
-      final titleLower = job.title.toLowerCase();
-      final descLower = job.fullDescription.toLowerCase();
-      final tagsLower = job.tags.map((t) => t.toLowerCase()).toSet();
-
-      int matchingSkillCount = 0;
-      final List<String> matchedSkills = [];
-      for (final skill in userSkills) {
-        if (titleLower.contains(skill) || descLower.contains(skill) || tagsLower.contains(skill)) {
-          matchingSkillCount++;
-          matchedSkills.add(skill);
-        }
+      if (job.applicationUrl.isNotEmpty && !seenNewUrls.add(job.applicationUrl)) {
+        continue;
       }
+      candidateJobs.add(job);
+    }
+    if (candidateJobs.isEmpty) return;
 
-      int roleBonus = 0;
-      for (final role in userRoles) {
-        if (titleLower.contains(role) || descLower.contains(role)) {
-          roleBonus = 15;
-          break;
+    final backendUrl = _effectiveBackendUrl;
+    final hasSecureBackend = backendUrl.startsWith('https://');
+    final isMixedContentBlocked = _isHttpsWebOrigin && !hasSecureBackend;
+    final resumeText = _buildCandidateResumeText(state);
+
+    final remoteResultsById = <String, Map<String, dynamic>>{};
+    String? remoteScoringMode;
+    bool backendAttempted = false;
+    bool backendReachable = false;
+
+    if (!isMixedContentBlocked) {
+      backendAttempted = true;
+      final jobsToScore = candidateJobs.take(15).toList();
+      try {
+        final response = await _httpClient
+            .post(
+              Uri.parse('$backendUrl/api/score-jobs'),
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode({
+                'resume_text': resumeText,
+                'jobs': jobsToScore
+                    .map(
+                      (j) => {
+                        'id': j.id,
+                        'title': j.title,
+                        'company': j.company,
+                        'description': j.fullDescription,
+                      },
+                    )
+                    .toList(),
+                'max_to_score': jobsToScore.length,
+              }),
+            )
+            .timeout(const Duration(seconds: 20));
+
+        if (response.statusCode == 200) {
+          final decoded = jsonDecode(response.body);
+          if (decoded is Map<String, dynamic>) {
+            backendReachable = true;
+            remoteScoringMode = decoded['scoring_mode']?.toString();
+            final results = decoded['results'];
+            if (results is List) {
+              for (final item in results) {
+                if (item is Map<String, dynamic>) {
+                  final id = item['id']?.toString();
+                  if (id != null && id.isNotEmpty) {
+                    remoteResultsById[id] = item;
+                  }
+                }
+              }
+            }
+          }
         }
+      } catch (_) {
+        // Backend unreachable or timed out; fall back gracefully below
       }
-
-      // Base score 70, plus up to 25 for skills + role alignment
-      final calculatedScore = (70 + (matchingSkillCount * 4) + roleBonus).clamp(72, 98);
-
-      final whyFits = <String>[
-        if (matchedSkills.isNotEmpty) 'Matches skills: ${matchedSkills.take(3).join(', ')}',
-        if (roleBonus > 0) 'Aligned with your target career track',
-        'Discovered live from company portal',
-      ];
-
-      final enriched = JobModel(
-        id: job.id,
-        title: job.title,
-        company: job.company,
-        location: job.location,
-        isRemote: job.isRemote,
-        salaryMin: job.salaryMin,
-        salaryMax: job.salaryMax,
-        tags: job.tags,
-        matchScore: calculatedScore,
-        whyItFits: whyFits,
-        skillGaps: job.skillGaps,
-        tailoredPitch: job.tailoredPitch,
-        recruiterMessage: job.recruiterMessage,
-        fullDescription: job.fullDescription,
-        postedTimeAgo: 'Just now',
-        applicationUrl: job.applicationUrl,
-      );
-
-      newScoredJobs.add(enriched);
     }
 
-    final combined = [...newScoredJobs, ...state.allJobs];
-    emit(state.copyWith(allJobs: combined));
+    if (emit.isDone) return;
+
+    // Re-read latest state after await to avoid stale-state overwrite races.
+    final currentState = state;
+    final latestExistingUrls =
+        currentState.allJobs.map((j) => j.applicationUrl).toSet();
+    final userSkills =
+        currentState.userProfile.primarySkills.map((s) => s.toLowerCase()).toSet();
+    final userRoles =
+        currentState.targetRoles.map((r) => r.toLowerCase()).toList();
+
+    final List<JobModel> newScoredJobs = [];
+    for (final job in candidateJobs) {
+      if (latestExistingUrls.contains(job.applicationUrl)) continue;
+
+      final remote = remoteResultsById[job.id];
+      if (remote != null) {
+        newScoredJobs.add(
+          _applyRemoteScoring(
+            job: job,
+            remote: remote,
+            scoringMode: remoteScoringMode,
+            userSkills: userSkills,
+            userRoles: userRoles,
+          ),
+        );
+      } else {
+        final fallbackReason = isMixedContentBlocked
+            ? 'Offline keyword fallback (HTTPS page without HTTPS BACKEND_URL)'
+            : backendAttempted && !backendReachable
+                ? 'Offline keyword fallback (Python backend unreachable)'
+                : 'Offline keyword fallback (batch limit)';
+        newScoredJobs.add(
+          _scoreJobOfflineFallback(
+            job: job,
+            userSkills: userSkills,
+            userRoles: userRoles,
+            fallbackReason: fallbackReason,
+          ),
+        );
+      }
+    }
+
+    if (newScoredJobs.isEmpty) return;
+    final combined = [...newScoredJobs, ...currentState.allJobs];
+    emit(currentState.copyWith(allJobs: combined));
+  }
+
+  String _buildCandidateResumeText(JobState currentState) {
+    final profile = currentState.userProfile;
+    final parts = <String>[
+      if (profile.parsedSummary.trim().isNotEmpty) profile.parsedSummary.trim(),
+      if (profile.primarySkills.isNotEmpty)
+        'Skills: ${profile.primarySkills.join(', ')}',
+      if (currentState.targetRoles.isNotEmpty)
+        'Target Roles: ${currentState.targetRoles.join(', ')}',
+    ];
+    return parts.join('\n');
+  }
+
+  JobModel _applyRemoteScoring({
+    required JobModel job,
+    required Map<String, dynamic> remote,
+    required String? scoringMode,
+    required Set<String> userSkills,
+    required List<String> userRoles,
+  }) {
+    final fallbackScore = _computeKeywordScore(
+      job: job,
+      userSkills: userSkills,
+      userRoles: userRoles,
+    ).score;
+
+    final matchScore =
+        (remote['match_score'] as num?)?.round().clamp(0, 100) ?? fallbackScore;
+    final cosineSimilarity = (remote['cosine_similarity'] as num?)?.toDouble();
+
+    final remoteWhy = (remote['why_it_fits'] as List?)
+            ?.map((e) => e.toString().trim())
+            .where((s) => s.isNotEmpty)
+            .toList() ??
+        <String>[];
+    final remoteGaps = (remote['skill_gaps'] as List?)
+            ?.map((e) => e.toString().trim())
+            .where((s) => s.isNotEmpty)
+            .toList() ??
+        <String>[];
+    final remotePitch = remote['tailored_pitch']?.toString().trim() ?? '';
+    final remoteRecruiter =
+        remote['recruiter_message']?.toString().trim() ?? '';
+
+    final modeLabel = scoringMode == null || scoringMode == 'llm_plus_embeddings'
+        ? 'Python LLM + FastEmbed'
+        : 'Python Backend ($scoringMode)';
+    final cosineSuffix = cosineSimilarity != null
+        ? ' • Cosine ${(cosineSimilarity * 100).toStringAsFixed(0)}%'
+        : '';
+
+    final whyFits = <String>[
+      '[$modeLabel$cosineSuffix]',
+      ...remoteWhy,
+      if (remoteWhy.isEmpty) 'Scored via Python semantic & LLM pipeline',
+    ];
+
+    return JobModel(
+      id: job.id,
+      title: job.title,
+      company: job.company,
+      companyLogo: job.companyLogo,
+      location: job.location,
+      isRemote: job.isRemote,
+      salaryMin: job.salaryMin,
+      salaryMax: job.salaryMax,
+      currency: job.currency,
+      tags: job.tags,
+      matchScore: matchScore,
+      whyItFits: whyFits,
+      skillGaps: remoteGaps.isNotEmpty ? remoteGaps : job.skillGaps,
+      tailoredPitch: remotePitch.isNotEmpty ? remotePitch : job.tailoredPitch,
+      recruiterMessage:
+          remoteRecruiter.isNotEmpty ? remoteRecruiter : job.recruiterMessage,
+      fullDescription: job.fullDescription,
+      postedTimeAgo: 'Just now',
+      applicationUrl: job.applicationUrl,
+    );
+  }
+
+  ({int score, List<String> matchedSkills, int roleBonus}) _computeKeywordScore({
+    required JobModel job,
+    required Set<String> userSkills,
+    required List<String> userRoles,
+  }) {
+    final titleLower = job.title.toLowerCase();
+    final descLower = job.fullDescription.toLowerCase();
+    final tagsLower = job.tags.map((t) => t.toLowerCase()).toSet();
+
+    int matchingSkillCount = 0;
+    final List<String> matchedSkills = [];
+    for (final skill in userSkills) {
+      if (titleLower.contains(skill) ||
+          descLower.contains(skill) ||
+          tagsLower.contains(skill)) {
+        matchingSkillCount++;
+        matchedSkills.add(skill);
+      }
+    }
+
+    int roleBonus = 0;
+    for (final role in userRoles) {
+      if (titleLower.contains(role) || descLower.contains(role)) {
+        roleBonus = 15;
+        break;
+      }
+    }
+
+    final calculatedScore =
+        (70 + (matchingSkillCount * 4) + roleBonus).clamp(72, 98);
+    return (
+      score: calculatedScore,
+      matchedSkills: matchedSkills,
+      roleBonus: roleBonus,
+    );
+  }
+
+  JobModel _scoreJobOfflineFallback({
+    required JobModel job,
+    required Set<String> userSkills,
+    required List<String> userRoles,
+    required String fallbackReason,
+  }) {
+    final keyword = _computeKeywordScore(
+      job: job,
+      userSkills: userSkills,
+      userRoles: userRoles,
+    );
+
+    final whyFits = <String>[
+      fallbackReason,
+      if (keyword.matchedSkills.isNotEmpty)
+        'Matches skills: ${keyword.matchedSkills.take(3).join(', ')}',
+      if (keyword.roleBonus > 0) 'Aligned with your target career track',
+      'Discovered live from company portal',
+    ];
+
+    return JobModel(
+      id: job.id,
+      title: job.title,
+      company: job.company,
+      companyLogo: job.companyLogo,
+      location: job.location,
+      isRemote: job.isRemote,
+      salaryMin: job.salaryMin,
+      salaryMax: job.salaryMax,
+      currency: job.currency,
+      tags: job.tags,
+      matchScore: keyword.score,
+      whyItFits: whyFits,
+      skillGaps: job.skillGaps,
+      tailoredPitch: job.tailoredPitch,
+      recruiterMessage: job.recruiterMessage,
+      fullDescription: job.fullDescription,
+      postedTimeAgo: 'Just now',
+      applicationUrl: job.applicationUrl,
+    );
   }
 
   void _onImportLocalCredentials(ImportLocalCredentials event, Emitter<JobState> emit) {
@@ -812,7 +1037,30 @@ class JobBloc extends Bloc<JobEvent, JobState> {
     defaultValue: 'http://localhost:8000',
   );
 
-  bool get _isHttpsWebOrigin => kIsWeb && Uri.base.scheme == 'https';
+  /// Resolves the configured backend URL, falling back to `http://localhost:8000`
+  /// when `--dart-define=BACKEND_URL=` is passed empty (e.g. unset CI repo var).
+  static String resolveBackendUrl([String? override]) {
+    final rawUrl = (override ?? _defaultBackendUrl).trim();
+    final resolved = rawUrl.isEmpty ? 'http://localhost:8000' : rawUrl;
+    return resolved.endsWith('/')
+        ? resolved.substring(0, resolved.length - 1)
+        : resolved;
+  }
+
+  static String get backendUrl => resolveBackendUrl();
+
+  String get _effectiveBackendUrl => resolveBackendUrl(_backendUrlOverride);
+
+  bool get _isHttpsWebOrigin =>
+      _isHttpsWebOriginOverride ?? (kIsWeb && Uri.base.scheme == 'https');
+
+  @override
+  Future<void> close() {
+    if (_ownsHttpClient) {
+      _httpClient.close();
+    }
+    return super.close();
+  }
 
   void _onAutoApplyJob(AutoApplyJob event, Emitter<JobState> emit) async {
     // Set initial pending status
@@ -828,15 +1076,16 @@ class JobBloc extends Bloc<JobEvent, JobState> {
     // Handle HTTPS Web Demo environment (GitHub Pages)
     // Modern browsers enforce Strict Mixed Content Blocking on HTTPS origins,
     // which prevents direct unencrypted HTTP calls to http://localhost:8000.
-    final hasSecureBackend = _defaultBackendUrl.startsWith('https://');
+    final resolvedBackendUrl = _effectiveBackendUrl;
+    final hasSecureBackend = resolvedBackendUrl.startsWith('https://');
     if (_isHttpsWebOrigin && !hasSecureBackend) {
       await _runWebDemoAutoApplySimulation(event, emit);
       return;
     }
 
     try {
-      final response = await http.post(
-        Uri.parse('$_defaultBackendUrl/api/auto-apply'),
+      final response = await _httpClient.post(
+        Uri.parse('$resolvedBackendUrl/api/auto-apply'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'job_url': event.jobUrl,
@@ -880,10 +1129,10 @@ class JobBloc extends Bloc<JobEvent, JobState> {
       }
     } catch (e) {
       final updatedStatuses = Map<String, AutoApplyStatus>.from(state.autoApplyStatuses);
-      final isMixedContent = _isHttpsWebOrigin && _defaultBackendUrl.startsWith('http://');
+      final isMixedContent = _isHttpsWebOrigin && resolvedBackendUrl.startsWith('http://');
       final errorMsg = isMixedContent
-          ? 'Strict Mixed Content Blocked: HTTPS web app cannot make unencrypted HTTP requests to $_defaultBackendUrl. Deploy an HTTPS backend tunnel or run the desktop app.'
-          : 'Connection failed: $e. Is the backend running on $_defaultBackendUrl?';
+          ? 'Strict Mixed Content Blocked: HTTPS web app cannot make unencrypted HTTP requests to $resolvedBackendUrl. Deploy an HTTPS backend tunnel or run the desktop app.'
+          : 'Connection failed: $e. Is the backend running on $resolvedBackendUrl?';
 
       updatedStatuses[event.jobId] = AutoApplyStatus(
         jobId: event.jobId,

@@ -39,7 +39,10 @@ jobs:
         run: flutter pub get
 
       - name: Build Flutter Web
-        run: flutter build web --release --base-href "/${{ github.event.repository.name }}/"
+        run: |
+          flutter build web --release \
+            --base-href "/${{ github.event.repository.name }}/" \
+            --dart-define=BACKEND_URL="${{ vars.BACKEND_URL }}"
 
       - name: Upload GitHub Pages Artifact
         uses: actions/upload-pages-artifact@v3

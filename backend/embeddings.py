@@ -103,7 +103,7 @@ def generate_embeddings_batch(
         print(f"  [Embeddings] ✓ Generated {len(all_embeddings)} vectors via FastEmbed (Local)")
         return all_embeddings
 
-    # Otherwise use Gemini with rate limit pacing
+    # Otherwise use Gemini with rate limit pacing, falling back to FastEmbed on failure
     for i in range(0, total, batch_size):
         batch = texts[i : i + batch_size]
         batch_num = (i // batch_size) + 1
@@ -122,14 +122,20 @@ def generate_embeddings_batch(
                     continue
 
                 result = gemini.models.embed_content(
-                    model=Config.EMBEDDING_MODEL,
+                    model="text-embedding-004",
                     contents=truncated,
                 )
-                all_embeddings.append(result.embeddings[0].values)
+                all_embeddings.append(list(result.embeddings[0].values))
 
             except Exception as e:
-                print(f"    [Embeddings] Error embedding text: {e}")
-                all_embeddings.append([0.0] * Config.EMBEDDING_DIMENSIONS)
+                print(
+                    f"    [Embeddings] Gemini batch embedding failed ({e}), "
+                    "falling back to local FastEmbed for batch..."
+                )
+                model = _get_fastembed()
+                cleaned_texts = [(t[:4000] if t else " ") for t in texts]
+                embeddings = list(model.embed(cleaned_texts, batch_size=batch_size))
+                return [[float(x) for x in emb] for emb in embeddings]
 
         if i + batch_size < total:
             time.sleep(delay_between_batches)

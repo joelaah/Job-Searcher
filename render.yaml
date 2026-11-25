@@ -1,0 +1,35 @@
+# Render Blueprint for JOB SeArCh FastAPI Backend
+# Deploy via Render Dashboard -> Blueprints -> Connect repository.
+#
+# Runtime Notes:
+# - Live job scraping, FastEmbed/Gemini semantic embeddings, and Groq/Gemini LLM
+#   scoring (/api/health, /api/scrape-url, /api/score-jobs) run cleanly on Render.
+# - Playwright browser auto-apply (/api/auto-apply) requires Chromium binaries
+#   (`playwright install chromium`) and >512 MB RAM (Docker / paid instance),
+#   so auto-apply is intended for local desktop runs rather than Render free tier.
+
+services:
+  - type: web
+    name: job-searcher-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+      - key: HOST
+        value: "0.0.0.0"
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false

@@ -11,12 +11,14 @@ supabase>=2.4.0
 # AI Engine: Groq (free LLM) and FastEmbed (local 768-dim embeddings)
 groq>=1.7.0
 fastembed>=0.8.0
+numpy>=1.26.0
 
 # Google Gemini (optional fallback)
 google-genai>=1.0.0
 
 # Utilities
 python-dotenv>=1.0.0
+httpx>=0.27.0
 
 # Web API & Rate Limiting
 fastapi>=0.110.0
@@ -26,7 +28,7 @@ slowapi>=0.1.10
 # Anti-Bot & Stealth Web Scraping Fallback
 scrapling[fetchers]>=0.4.15
 
-# Auto-Apply Engine (Playwright Browser Automation)
+# Auto-Apply Engine (Playwright Browser Automation — local desktop only unless Chromium + >512MB RAM in Docker)
 playwright>=1.44.0
 pyyaml>=6.0
 

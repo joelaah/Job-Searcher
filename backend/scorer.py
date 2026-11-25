@@ -12,9 +12,6 @@ from config import Config
 
 
 _client = None
-
-
-_client = None
 _groq_client = None
 
 
@@ -176,26 +173,29 @@ def batch_score_jobs(
     import time
 
     scored_jobs = []
+    total_to_score = min(len(jobs), max_to_score)
 
-    for i, job in enumerate(jobs):
+    for i, raw_job in enumerate(jobs):
+        job = dict(raw_job)
         similarity = job.get("similarity", 0.5)
 
         if i < max_to_score:
-            print(f"  [LLM] Scoring {i+1}/{min(len(jobs), max_to_score)}: {job['title']}")
+            print(f"  [LLM] Scoring {i+1}/{total_to_score}: {job.get('title', '')}")
 
             analysis = score_job_fit(
                 resume_text=resume_text,
-                job_title=job["title"],
-                job_company=job["company"],
+                job_title=job.get("title", ""),
+                job_company=job.get("company", ""),
                 job_description=job.get("description", ""),
                 cosine_similarity=similarity,
             )
 
             job.update(analysis)
 
-            # Rate limit: 15 req/min on free tier → ~4 sec between calls
-            if i < max_to_score - 1:
-                time.sleep(4)
+            # Rate limit pacing only when another LLM call follows and a key is configured
+            if i < total_to_score - 1 and (Config.GROQ_API_KEY or Config.GEMINI_API_KEY):
+                delay = 0.5 if Config.GROQ_API_KEY else 2.0
+                time.sleep(delay)
         else:
             # Use fallback for remaining jobs
             job.update(_fallback_score(similarity))

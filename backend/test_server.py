@@ -364,6 +364,178 @@ work_authorization:
         self.assertEqual(count, 5)
         self.assertEqual(mock_table.upsert.call_count, 3)
 
+    def test_score_jobs_empty_resume_and_empty_profile_returns_400(self):
+        """Verify /api/score-jobs returns 400 when both resume_text and local profile are empty."""
+        from candidate_profile import CandidateProfile
+
+        with patch("candidate_profile.load_profile", return_value=CandidateProfile()):
+            response = self.client.post(
+                "/api/score-jobs",
+                json={
+                    "resume_text": "   ",
+                    "jobs": [
+                        {
+                            "id": "job-1",
+                            "title": "Python Engineer",
+                            "company": "Acme",
+                            "description": "FastAPI backend role",
+                        }
+                    ],
+                },
+            )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("resume_text is required", response.json()["detail"])
+
+    @patch("server.scorer.batch_score_jobs")
+    @patch("server.embeddings.generate_embeddings_batch")
+    @patch("server.embeddings.embed_resume")
+    def test_score_jobs_success_and_max_cap(
+        self, mock_embed_resume, mock_embed_batch, mock_batch_score
+    ):
+        """Verify /api/score-jobs computes cosine similarity, caps max_to_score at 15, and formats output."""
+        mock_embed_resume.return_value = [1.0, 0.0, 0.0]
+        # 20 jobs: job-19 has perfect alignment [1,0,0], others orthogonal [0,1,0]
+        mock_embed_batch.return_value = [
+            [1.0, 0.0, 0.0] if i == 19 else [0.0, 1.0, 0.0] for i in range(20)
+        ]
+
+        def fake_batch_score(resume_text, jobs, max_to_score=10):
+            self.assertEqual(max_to_score, 15)  # capped at 15 even when 99 requested
+            self.assertEqual(jobs[0]["id"], "job-19")  # sorted highest similarity first
+            self.assertAlmostEqual(jobs[0]["similarity"], 1.0, places=4)
+            self.assertAlmostEqual(jobs[1]["similarity"], 0.0, places=4)
+            enriched = []
+            for idx, j in enumerate(jobs):
+                item = dict(j)
+                item.update(
+                    {
+                        "match_score": 92 if idx == 0 else 45,
+                        "why_it_fits": ["Strong Python/FastAPI match"],
+                        "skill_gaps": ["Kubernetes"],
+                        "tailored_pitch": "Built production FastAPI + RAG services.",
+                        "recruiter_message": "Subject: Application\n\nHello!",
+                    }
+                )
+                enriched.append(item)
+            return enriched
+
+        mock_batch_score.side_effect = fake_batch_score
+
+        jobs_payload = [
+            {
+                "id": f"job-{i}",
+                "title": f"Engineer {i}",
+                "company": "TestCorp",
+                "description": "Python FastAPI developer",
+            }
+            for i in range(20)
+        ]
+        response = self.client.post(
+            "/api/score-jobs",
+            json={
+                "resume_text": "Python FastAPI engineer",
+                "jobs": jobs_payload,
+                "max_to_score": 99,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["scoring_mode"], "llm_plus_embeddings")
+        self.assertEqual(len(data["results"]), 20)
+        top = data["results"][0]
+        self.assertEqual(top["id"], "job-19")
+        self.assertEqual(top["match_score"], 92)
+        self.assertEqual(top["cosine_similarity"], 1.0)
+        self.assertEqual(top["why_it_fits"], ["Strong Python/FastAPI match"])
+        self.assertEqual(top["skill_gaps"], ["Kubernetes"])
+        self.assertIn("FastAPI", top["tailored_pitch"])
+        self.assertIn("Subject:", top["recruiter_message"])
+
+    @patch("server.scorer.batch_score_jobs")
+    @patch("server.embeddings.embed_resume", side_effect=RuntimeError("offline"))
+    def test_score_jobs_profile_fallback_and_embedding_failure(
+        self, mock_embed_resume, mock_batch_score
+    ):
+        """Verify profile fallback resume and 0.5 similarity fallback when embeddings fail."""
+        from candidate_profile import CandidateProfile
+
+        profile = CandidateProfile(
+            full_name="Joel Test",
+            current_title="Backend Python Engineer",
+            default_cover_letter="Built FastAPI and pgvector systems.",
+        )
+
+        def fake_batch_score(resume_text, jobs, max_to_score=5):
+            self.assertIn("Backend Python Engineer", resume_text)
+            self.assertIn("FastAPI and pgvector", resume_text)
+            self.assertEqual(max_to_score, 5)
+            self.assertEqual(jobs[0]["similarity"], 0.5)
+            item = dict(jobs[0])
+            item.update(
+                {
+                    "match_score": 78,
+                    "why_it_fits": ["Profile fallback match"],
+                    "skill_gaps": [],
+                    "tailored_pitch": "Pitch",
+                    "recruiter_message": "Message",
+                }
+            )
+            return [item]
+
+        mock_batch_score.side_effect = fake_batch_score
+
+        with patch("candidate_profile.load_profile", return_value=profile):
+            response = self.client.post(
+                "/api/score-jobs",
+                json={
+                    "resume_text": "",
+                    "jobs": [
+                        {
+                            "id": "job-offline",
+                            "title": "Python AI Engineer",
+                            "company": "OfflineCo",
+                            "description": "RAG and FastAPI",
+                        }
+                    ],
+                },
+            )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["scoring_mode"], "llm_plus_embeddings")
+        self.assertEqual(data["results"][0]["cosine_similarity"], 0.5)
+        self.assertEqual(data["results"][0]["match_score"], 78)
+
+    @patch("server.embeddings.generate_embeddings_batch")
+    @patch("server.embeddings.embed_resume")
+    def test_score_jobs_zero_vector_safe(self, mock_embed_resume, mock_embed_batch):
+        """Verify zero-vectors are handled safely without ZeroDivisionError."""
+        mock_embed_resume.return_value = [0.0, 0.0, 0.0]
+        mock_embed_batch.return_value = [[0.0, 0.0, 0.0]]
+
+        with patch("server.scorer._call_llm", return_value=""):
+            response = self.client.post(
+                "/api/score-jobs",
+                json={
+                    "resume_text": "Python engineer",
+                    "jobs": [
+                        {
+                            "id": "job-zero",
+                            "title": "Engineer",
+                            "company": "ZeroCo",
+                            "description": "Backend",
+                        }
+                    ],
+                },
+            )
+
+        self.assertEqual(response.status_code, 200)
+        result = response.json()["results"][0]
+        self.assertEqual(result["cosine_similarity"], 0.0)
+        self.assertEqual(result["match_score"], 0)
+
 
 if __name__ == "__main__":
     unittest.main()

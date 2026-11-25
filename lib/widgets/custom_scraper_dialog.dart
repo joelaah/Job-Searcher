@@ -48,10 +48,7 @@ class _CustomScraperDialogState extends State<CustomScraperDialog> {
 
     try {
       // 1. Try FastAPI backend endpoint (if not blocked by browser HTTPS Mixed Content)
-      const backendUrl = String.fromEnvironment(
-        'BACKEND_URL',
-        defaultValue: 'http://127.0.0.1:8000',
-      );
+      final backendUrl = JobBloc.backendUrl;
       final isHttpsOrigin = kIsWeb && Uri.base.scheme == 'https';
       final hasSecureBackend = backendUrl.startsWith('https://');
       bool backendSuccess = false;
@@ -200,10 +197,15 @@ class _CustomScraperDialogState extends State<CustomScraperDialog> {
     if (_scrapedJobs.isEmpty) return;
     context.read<JobBloc>().add(AddScrapedJobs(_scrapedJobs));
     Navigator.of(context).pop();
+    final isHttpsOrigin = kIsWeb && Uri.base.scheme == 'https';
+    final hasSecureBackend = JobBloc.backendUrl.startsWith('https://');
+    final willTryBackend = !isHttpsOrigin || hasSecureBackend;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Successfully imported ${_scrapedJobs.length} live scraped jobs into your matrix!',
+          willTryBackend
+              ? 'Importing ${_scrapedJobs.length} scraped jobs & scoring via Python AI engine...'
+              : 'Imported ${_scrapedJobs.length} scraped jobs with offline keyword fallback.',
         ),
         backgroundColor: AppColors.matchHigh,
       ),

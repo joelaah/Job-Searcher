@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, HttpUrl
 from typing import List, Optional
+import math
 import uvicorn
 import os
 import asyncio
@@ -19,6 +20,8 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
 from scraper import scrape_custom_url, scrape_all_sources, ScrapedJob, is_safe_url
+import embeddings
+import scorer
 
 # Initialize Limiter keyed by client IP address
 limiter = Limiter(key_func=get_remote_address, default_limits=["120/minute"])
@@ -42,6 +45,12 @@ ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
 ]
+_extra_origins = [
+    origin.strip()
+    for origin in os.getenv("CORS_ORIGINS", "").split(",")
+    if origin.strip()
+]
+ALLOWED_ORIGINS.extend(_extra_origins)
 
 app.add_middleware(
     CORSMiddleware,
@@ -72,6 +81,69 @@ class HealthResponse(BaseModel):
     services: dict
 
 
+class ScoreJobItem(BaseModel):
+    id: str
+    title: str
+    company: Optional[str] = ""
+    description: Optional[str] = ""
+
+
+class ScoreJobsRequest(BaseModel):
+    resume_text: Optional[str] = ""
+    jobs: List[ScoreJobItem]
+    max_to_score: Optional[int] = 5
+
+
+def _cosine_similarity(vec_a: list[float], vec_b: list[float]) -> float:
+    """Compute cosine similarity safely, returning 0.0 for empty or zero-norm vectors."""
+    if not vec_a or not vec_b or len(vec_a) != len(vec_b):
+        return 0.0
+    dot = sum(a * b for a, b in zip(vec_a, vec_b))
+    norm_a = math.sqrt(sum(a * a for a in vec_a))
+    norm_b = math.sqrt(sum(b * b for b in vec_b))
+    if norm_a == 0.0 or norm_b == 0.0:
+        return 0.0
+    sim = dot / (norm_a * norm_b)
+    if math.isnan(sim) or math.isinf(sim):
+        return 0.0
+    return max(-1.0, min(1.0, float(sim)))
+
+
+def _build_resume_from_profile() -> str:
+    """Build a concise fallback resume string from local candidate_profile.yaml."""
+    try:
+        from candidate_profile import load_profile
+        profile = load_profile()
+    except Exception:
+        return ""
+
+    parts: list[str] = []
+    if profile.full_name or profile.current_title:
+        header = " - ".join(p for p in (profile.full_name, profile.current_title) if p)
+        if profile.current_company:
+            header += f" at {profile.current_company}"
+        parts.append(header)
+    if profile.location:
+        parts.append(f"Location: {profile.location}")
+    if profile.preferences.years_of_experience:
+        parts.append(f"Experience: {profile.preferences.years_of_experience} years")
+    if profile.default_cover_letter:
+        parts.append(profile.default_cover_letter)
+    if profile.education:
+        edu_entries = [
+            ", ".join(x for x in (e.degree, e.school, e.graduation_year) if x)
+            for e in profile.education
+            if any((e.degree, e.school, e.graduation_year))
+        ]
+        if edu_entries:
+            parts.append(f"Education: {'; '.join(edu_entries)}")
+    for key in ("greatest_strength", "why_interested"):
+        val = profile.custom_answers.get(key)
+        if val:
+            parts.append(val)
+    return "\n".join(p.strip() for p in parts if p and p.strip())
+
+
 @app.get("/api/health")
 @limiter.limit("60/minute")
 def health_check(request: Request):
@@ -85,8 +157,92 @@ def health_check(request: Request):
             "ashby": "ready",
             "generic_crawler": "ready",
             "auto_apply": "ready",
+            "embeddings": "ready",
+            "llm_scorer": "ready",
             "rate_limiter": "active",
         },
+    }
+
+
+@app.post("/api/score-jobs")
+@limiter.limit("20/minute")
+def api_score_jobs(request: Request, payload: ScoreJobsRequest):
+    """Score scraped jobs using semantic embeddings + Groq/Gemini LLM analysis."""
+    resume_text = (payload.resume_text or "").strip()
+    if not resume_text:
+        resume_text = _build_resume_from_profile()
+    if not resume_text:
+        raise HTTPException(
+            status_code=400,
+            detail="resume_text is required when no local candidate profile is configured.",
+        )
+
+    raw_max = payload.max_to_score if payload.max_to_score is not None else 5
+    max_to_score = max(0, min(15, int(raw_max)))
+
+    if not payload.jobs:
+        return {
+            "results": [],
+            "scoring_mode": "llm_plus_embeddings",
+        }
+
+    job_texts = [
+        "Represent this job posting for matching against candidate resumes: "
+        + " ".join(part for part in (j.title, j.company or "", j.description or "") if part).strip()
+        for j in payload.jobs
+    ]
+
+    similarities: list[float] = [0.5] * len(payload.jobs)
+    try:
+        resume_vec = embeddings.embed_resume(resume_text)
+        job_vecs = embeddings.generate_embeddings_batch(job_texts)
+        if (
+            isinstance(resume_vec, list)
+            and isinstance(job_vecs, list)
+            and len(job_vecs) == len(payload.jobs)
+        ):
+            similarities = [
+                _cosine_similarity(resume_vec, jvec) if isinstance(jvec, list) else 0.5
+                for jvec in job_vecs
+            ]
+    except Exception as e:
+        print(f"[ScoreJobs] Embedding generation failed, using 0.5 fallback similarity: {e}")
+        similarities = [0.5] * len(payload.jobs)
+
+    job_dicts = [
+        {
+            "id": j.id,
+            "title": j.title,
+            "company": j.company or "",
+            "description": j.description or "",
+            "similarity": sim,
+        }
+        for j, sim in zip(payload.jobs, similarities)
+    ]
+    job_dicts.sort(key=lambda item: item["similarity"], reverse=True)
+
+    scored = scorer.batch_score_jobs(
+        resume_text=resume_text,
+        jobs=job_dicts,
+        max_to_score=max_to_score,
+    )
+
+    results = [
+        {
+            "id": item.get("id", ""),
+            "match_score": max(0, min(100, int(item.get("match_score", 0)))),
+            "cosine_similarity": round(float(item.get("similarity", 0.5)), 4),
+            "why_it_fits": list(item.get("why_it_fits") or []),
+            "skill_gaps": list(item.get("skill_gaps") or []),
+            "tailored_pitch": str(item.get("tailored_pitch") or ""),
+            "recruiter_message": str(item.get("recruiter_message") or ""),
+        }
+        for item in scored
+    ]
+
+    return {
+        "results": results,
+        "scoring_mode": "llm_plus_embeddings",
     }
 
 
